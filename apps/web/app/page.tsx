@@ -25,8 +25,8 @@ export default function Home() {
     }
 
     Promise.all([
-      fetch("${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/my-kids", { headers: { "Authorization": `Bearer ${token}` } }).then(r => r.json()),
-      fetch("${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/notices", { headers: { "Authorization": `Bearer ${token}` } }).then(r => r.json())
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/my-kids`, { headers: { "Authorization": `Bearer ${token}` } }).then(r => r.json()),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/notices`, { headers: { "Authorization": `Bearer ${token}` } }).then(r => r.json())
     ]).then(([kidsData, noticesData]) => {
       if (Array.isArray(kidsData)) setMyKids(kidsData);
       if (Array.isArray(noticesData)) setNotices(noticesData);
