@@ -18,7 +18,7 @@ export default function HandoffPage() {
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/handoff/verify/${code}`, {
-        headers: { `Authorization": `Bearer ${localStorage.getItem('token')}` }
+        headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
       });
       if (!response.ok) throw new Error("Invalid code or no children found");
       const data = await response.json();

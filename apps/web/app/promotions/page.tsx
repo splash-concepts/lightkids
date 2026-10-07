@@ -50,7 +50,7 @@ export default function PromotionsPage() {
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/${childId}/promote`, {
-        method: `PATCH",
+        method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
           "Authorization": `Bearer ${localStorage.getItem('token')}`
