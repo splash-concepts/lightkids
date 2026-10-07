@@ -1,0 +1,153 @@
+.register-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 3rem 1.5rem;
+  background-color: var(--bg-main);
+}
+
+.text-accent { color: var(--accent); font-size: 0.8rem; font-weight: 600; }
+
+.register-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 600px;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.register-header {
+  text-align: center;
+}
+
+.register-header h2 {
+  font-size: 2rem;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.register-header p {
+  color: var(--text-secondary);
+}
+
+.back-link {
+  display: inline-block;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+.back-link:hover {
+  color: var(--primary);
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-glass);
+}
+
+.form-section:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.form-section h3 {
+  font-size: 1.1rem;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.input-group input, .input-group select {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.5);
+  font-family: inherit;
+  color: var(--text-primary);
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+@media (prefers-color-scheme: dark) {
+  .input-group input, .input-group select {
+    background: rgba(15, 23, 42, 0.5);
+    border-color: var(--border-glass);
+  }
+}
+
+.input-group input:focus, .input-group select:focus {
+  border-color: var(--primary);
+  background: var(--bg-surface);
+}
+
+.file-upload-zone {
+  border: 2px dashed var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  transition: border-color var(--transition-fast);
+}
+
+@media (prefers-color-scheme: dark) {
+  .file-upload-zone {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: var(--border-glass);
+  }
+}
+
+.file-upload-zone:hover {
+  border-color: var(--primary);
+}
+
+.upload-icon {
+  font-size: 2.5rem;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.submit-btn {
+  padding: 1rem;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 600px) {
+  .input-row {
+    grid-template-columns: 1fr;
+  }
+  .register-card {
+    padding: 2rem 1.5rem;
+  }
+}

@@ -1,102 +1,144 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
+"use client";
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
-
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
-
-  return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
+import { useState, useEffect } from "react";
+import "./page.css";
+import Link from "next/link";
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [user, setUser] = useState<any>(null);
+  const [myKids, setMyKids] = useState<any[]>([]);
+  const [notices, setNotices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://turborepo.dev/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login';
+      return;
+    }
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1] as string));
+      setUser(payload);
+    } catch (e) {
+      console.error(e);
+    }
+
+    Promise.all([
+      fetch("http://localhost:3001/children/my-kids", { headers: { "Authorization": `Bearer ${token}` } }).then(r => r.json()),
+      fetch("http://localhost:3001/notices", { headers: { "Authorization": `Bearer ${token}` } }).then(r => r.json())
+    ]).then(([kidsData, noticesData]) => {
+      if (Array.isArray(kidsData)) setMyKids(kidsData);
+      if (Array.isArray(noticesData)) setNotices(noticesData);
+      setLoading(false);
+    }).catch(err => {
+      console.error(err);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) {
+    return <div className="home-container"><div style={{padding: '3rem', color: 'white'}}>Loading Dashboard...</div></div>;
+  }
+
+  return (
+    <div className="home-container">
+      <div className="orb orb-1"></div>
+      <div className="orb orb-2"></div>
+      <div className="orb orb-3"></div>
+
+      <header className="header glass-panel animate-fade-in" style={{ animationDelay: '0.1s' }}>
+        <div className="logo-section">
+          <div className="logo-mark">L</div>
+          <h1 className="logo-text">Light <span className="gradient-text">Kids</span></h1>
         </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.dev?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.dev →
-        </a>
-      </footer>
+        <div className="user-profile">
+          <div className="avatar">
+            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`} alt="Profile" />
+          </div>
+          <div className="user-info">
+            <span className="user-name">{user?.email?.split('@')[0] || 'User'}</span>
+            <span className="user-role">{user?.role}</span>
+          </div>
+          <button onClick={() => { localStorage.removeItem('token'); window.location.href = '/login'; }} className="btn btn-outline btn-sm" style={{marginLeft: '1rem'}}>Logout</button>
+        </div>
+      </header>
+
+      <div className="dashboard-content">
+        <section className="welcome-section animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <h2 className="welcome-title">Welcome back!</h2>
+          <p className="welcome-subtitle">Here is what's happening at Light Kids today.</p>
+        </section>
+
+        {/* Dynamic Section for Parents / Mentors with Kids */}
+        {(user?.role === 'PARENT' || user?.role === 'MENTOR') && myKids.length > 0 && (
+          <section className="my-kids-section animate-fade-in" style={{ animationDelay: '0.3s', marginBottom: '2rem' }}>
+            <h3 className="section-title">My Children & Handoff Codes</h3>
+            <div className="kids-grid">
+              {myKids.map(kid => (
+                <div key={kid._id} className="kid-card glass-panel">
+                  <div className="kid-info">
+                    <h4>{kid.name}</h4>
+                    <p>{kid.classCategoryId?.name || 'Assigned Class'}</p>
+                  </div>
+                  <div className="kid-code">
+                    <span>{kid.uniqueCode}</span>
+                    <small>Handoff Code</small>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="actions-grid animate-fade-in" style={{ animationDelay: '0.4s' }}>
+          <div className="action-card glass-panel">
+            <h3 className="card-title">Quick Actions</h3>
+            <div className="action-buttons">
+              {(user?.role === 'ADMIN' || user?.role === 'PARENT' || user?.role === 'MENTOR') && (
+                <Link href="/register" className="btn btn-primary hover-lift text-center">Register New Child</Link>
+              )}
+              {(user?.role === 'MENTOR' || user?.role === 'ADMIN') && (
+                <Link href="/handoff" className="btn btn-secondary hover-lift text-center">Log Drop-off / Pick-up</Link>
+              )}
+              {(user?.role === 'MENTOR' || user?.role === 'ADMIN') && (
+                <Link href="/attendance" className="btn btn-secondary hover-lift text-center">Class Attendance</Link>
+              )}
+              <Link href="/materials" className="btn btn-secondary hover-lift text-center">Academic Materials</Link>
+              {user?.role === 'ADMIN' && (
+                <Link href="/promotions" className="btn btn-outline hover-lift text-center">Review Pending Promotions</Link>
+              )}
+              <Link href="/notices/new" className="btn btn-outline hover-lift text-center">Post Notice / Update</Link>
+            </div>
+          </div>
+
+          <div className="action-card glass-panel notice-board">
+            <h3 className="card-title">Live Notice Board</h3>
+            <ul className="activity-list">
+              {notices.length === 0 ? (
+                <p style={{color: 'var(--text-secondary)'}}>No notices to display.</p>
+              ) : notices.slice(0, 5).map((notice: any) => (
+                <li key={notice._id} className="activity-item">
+                  <div className={`activity-dot ${notice.type === 'EVENT' ? 'dot-success' : 'dot-info'}`}></div>
+                  <div className="activity-details" style={{ width: '100%' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <strong>{notice.title}</strong>
+                      <span className="badge" style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', background: 'var(--bg-main)', borderRadius: '4px' }}>
+                        {notice.type}
+                      </span>
+                    </div>
+                    <p style={{ marginTop: '0.25rem', fontSize: '0.9rem' }}>{notice.content}</p>
+                    {notice.dressCode && <p style={{ fontSize: '0.85rem', color: 'var(--primary)', marginTop: '0.25rem' }}>Dresscode: {notice.dressCode}</p>}
+                    <span className="activity-time" style={{ marginTop: '0.5rem', display: 'block' }}>
+                      By {notice.authorId?.name} • {new Date(notice.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

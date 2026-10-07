@@ -1,0 +1,58 @@
+.promo-container {
+  min-height: 100vh;
+  padding: 3rem 1.5rem;
+  background-color: var(--bg-main);
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.promo-card {
+  width: 100%;
+  max-width: 800px;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  z-index: 1;
+}
+
+.promo-header {
+  text-align: center;
+}
+
+.promo-header h2 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.promo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.promo-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background: var(--bg-surface);
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 3rem;
+  background: rgba(255,255,255,0.2);
+  border-radius: var(--radius-md);
+}
+
+.alert-message {
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
+  text-align: center;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+}
