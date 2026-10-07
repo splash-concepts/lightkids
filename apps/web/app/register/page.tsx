@@ -20,7 +20,7 @@ export default function RegisterChild() {
   });
 
   useEffect(() => {
-    fetch("http://localhost:3001/children/categories")
+    fetch("${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/categories")
       .then(res => res.json())
       .then(data => {
         setCategories(data);
@@ -62,7 +62,7 @@ export default function RegisterChild() {
         formDataToSend.append("caregiverImages", file);
       });
       
-      const response = await fetch("http://localhost:3001/children", {
+      const response = await fetch("${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children", {
         method: "POST",
         headers: { 
           "Authorization": `Bearer ${token}`

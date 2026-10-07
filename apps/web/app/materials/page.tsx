@@ -30,7 +30,7 @@ export default function MaterialsPage() {
       } catch (e) {}
     }
 
-    fetch("http://localhost:3001/children/categories")
+    fetch("${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/categories")
       .then(res => res.json())
       .then(data => {
         setCategories(data);
@@ -44,7 +44,7 @@ export default function MaterialsPage() {
   const fetchMaterials = async (classId: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3001/materials/class/${classId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/materials/class/${classId}`, {
         headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
       });
       const data = await response.json();
@@ -79,7 +79,7 @@ export default function MaterialsPage() {
       formDataToSend.append("classCategoryId", formData.classCategoryId);
       formDataToSend.append("file", file);
 
-      const response = await fetch("http://localhost:3001/materials", {
+      const response = await fetch("${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/materials", {
         method: "POST",
         headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` },
         body: formDataToSend,
@@ -173,7 +173,7 @@ export default function MaterialsPage() {
                       <small>Posted by {mat.authorId?.name || "Admin"} • {new Date(mat.createdAt).toLocaleDateString()}</small>
                     </div>
                     {mat.fileUrl && (
-                      <a href={`http://localhost:3001${mat.fileUrl}`} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm">
+                      <a href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${mat.fileUrl}`} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm">
                         Download
                       </a>
                     )}

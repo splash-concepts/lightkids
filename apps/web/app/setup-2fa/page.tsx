@@ -14,7 +14,7 @@ export default function Setup2FA() {
     // In a real app, you would pass the userId from context or JWT decoding
     const fetchQrCode = async () => {
       try {
-        const response = await fetch("http://localhost:3001/auth/2fa/generate", {
+        const response = await fetch("${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/auth/2fa/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId: "mock-mentor-id" }), // Replace with actual userId
@@ -34,7 +34,7 @@ export default function Setup2FA() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:3001/auth/2fa/turn-on", {
+      const response = await fetch("${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/auth/2fa/turn-on", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: "mock-mentor-id", token }),

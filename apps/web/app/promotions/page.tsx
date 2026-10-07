@@ -19,7 +19,7 @@ export default function PromotionsPage() {
 
   const fetchPromotable = async () => {
     try {
-      const response = await fetch("http://localhost:3001/children/promotable", {
+      const response = await fetch("${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/promotable", {
         headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
       });
       const data = await response.json();
@@ -33,7 +33,7 @@ export default function PromotionsPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch("http://localhost:3001/children/categories");
+      const response = await fetch("${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/categories");
       const data = await response.json();
       setCategories(data);
     } catch (err) {
@@ -49,7 +49,7 @@ export default function PromotionsPage() {
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/children/${childId}/promote`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/${childId}/promote`, {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",

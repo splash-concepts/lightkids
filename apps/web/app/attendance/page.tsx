@@ -13,7 +13,7 @@ export default function AttendancePage() {
   const [reasons, setReasons] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    fetch("http://localhost:3001/children/categories")
+    fetch("${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/categories")
       .then(res => res.json())
       .then(data => {
         setCategories(data);
@@ -27,7 +27,7 @@ export default function AttendancePage() {
   const fetchChildren = async (classId: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3001/children/class/${classId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/class/${classId}`, {
         headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
       });
       const data = await response.json();
@@ -53,7 +53,7 @@ export default function AttendancePage() {
         payload.reason = reasons[childId];
       }
 
-      const response = await fetch("http://localhost:3001/attendance/mark", {
+      const response = await fetch("${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/attendance/mark", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

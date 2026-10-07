@@ -40,7 +40,7 @@ export default function NewNotice() {
     const endpoint = formData.type === "EVENT" ? "event" : "update";
 
     try {
-      const response = await fetch(`http://localhost:3001/notices/${endpoint}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/notices/${endpoint}`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
