@@ -40,14 +40,16 @@ export default function Login() {
       localStorage.setItem("token", data.access_token);
       
       // Redirect based on role
-      if (data.role === 'ADMIN' || data.role === 'PARENT') {
-        window.location.href = "/";
-      } else if (data.role === 'MENTOR') {
+      if (data.role === 'ADMIN' || data.role === 'SUPER_ADMIN') {
+        window.location.href = "/dashboard/admin";
+      } else if (data.role === 'MENTOR' || data.role === 'MINISTER') {
         if (data.require2faSetup) {
           window.location.href = "/setup-2fa";
         } else {
-          window.location.href = "/";
+          window.location.href = data.role === 'MENTOR' ? "/dashboard/mentor" : "/";
         }
+      } else {
+        window.location.href = "/";
       }
     } catch (err: any) {
       setError(err.message);
