@@ -6,6 +6,7 @@ export type UserDocument = User & Document;
 export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',
   ADMIN = 'ADMIN',
+  MINISTER = 'MINISTER',
   MENTOR = 'MENTOR',
   PARENT = 'PARENT',
 }

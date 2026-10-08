@@ -89,4 +89,17 @@ export class AdminController {
     this.checkAdmin(req);
     return this.adminService.updateClassCategory(id, body, req.user.branchId);
   }
+
+  // User Management
+  @Post('users/:id/transfer')
+  async transferUser(@Param('id') userId: string, @Body() body: { branchId: string }, @Req() req: any) {
+    this.checkSuperAdmin(req);
+    return this.adminService.transferUserBranch(userId, body.branchId);
+  }
+
+  @Patch('users/:id/role')
+  async updateUserRole(@Param('id') userId: string, @Body() body: { role: string }, @Req() req: any) {
+    this.checkSuperAdmin(req);
+    return this.adminService.updateUserRole(userId, body.role);
+  }
 }

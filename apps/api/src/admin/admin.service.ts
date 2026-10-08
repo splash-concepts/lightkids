@@ -105,4 +105,23 @@ export class AdminService {
       { new: true }
     );
   }
+
+  // User Management
+  async transferUserBranch(userId: string, newBranchId: string) {
+    const user = await this.userModel.findByIdAndUpdate(userId, { branchId: newBranchId }, { new: true });
+    
+    if (user && user.role === UserRole.PARENT) {
+      // Transfer all children of this parent to the new branch
+      await this.childModel.updateMany(
+        { parentIds: userId },
+        { $set: { branchId: newBranchId } }
+      );
+    }
+    
+    return user;
+  }
+
+  async updateUserRole(userId: string, role: string) {
+    return this.userModel.findByIdAndUpdate(userId, { role }, { new: true });
+  }
 }

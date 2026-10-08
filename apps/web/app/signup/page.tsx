@@ -147,6 +147,7 @@ export default function Signup() {
                 <select name="role" id="role" value={formData.role} onChange={handleChange} required>
                   <option value="PARENT">Parent</option>
                   <option value="MENTOR">Mentor / Teacher</option>
+                  <option value="MINISTER">Minister</option>
                   <option value="ADMIN">Administrator</option>
                 </select>
               </div>
