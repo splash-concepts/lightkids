@@ -6,6 +6,11 @@ import * as qrcode from 'qrcode';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Get('branches')
+  async getBranches() {
+    return this.authService.getPublicBranches();
+  }
+
   @Post('register')
   async register(@Body() body: any) {
     return this.authService.register(body);

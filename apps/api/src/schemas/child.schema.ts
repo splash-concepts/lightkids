@@ -29,6 +29,9 @@ export class Child {
     medications: string[];
     emergencyContacts: Array<{ name: string; phone: string; relation: string }>;
   };
+
+  @Prop({ type: Types.ObjectId, ref: 'Branch', required: true })
+  branchId: Types.ObjectId;
 }
 
 export const ChildSchema = SchemaFactory.createForClass(Child);

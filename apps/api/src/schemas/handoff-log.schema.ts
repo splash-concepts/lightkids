@@ -24,6 +24,9 @@ export class HandoffLog {
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   loggedBy: Types.ObjectId; // User who processed the handoff
+
+  @Prop({ type: Types.ObjectId, ref: 'Branch', required: true })
+  branchId: Types.ObjectId;
 }
 
 export const HandoffLogSchema = SchemaFactory.createForClass(HandoffLog);

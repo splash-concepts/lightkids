@@ -11,11 +11,11 @@ export class ChildrenService {
     @InjectModel(ClassCategory.name) private classCategoryModel: Model<ClassCategoryDocument>
   ) {}
 
-  async getCategories() {
-    return this.classCategoryModel.find().sort({ ageMin: 1 });
+  async getCategories(branchId: string) {
+    return this.classCategoryModel.find({ branchId }).sort({ ageMin: 1 });
   }
 
-  async registerChild(data: any, userId: string, role: string) {
+  async registerChild(data: any, userId: string, role: string, branchId: string) {
     // Generate a unique 6-digit code
     const uniqueCode = Math.floor(100000 + Math.random() * 900000).toString();
     
@@ -27,12 +27,13 @@ export class ChildrenService {
     const child = await this.childModel.create({
       ...data,
       uniqueCode,
+      branchId,
     });
     return child;
   }
 
-  async getPromotableChildren() {
-    const children = await this.childModel.find().populate('classCategoryId');
+  async getPromotableChildren(branchId: string) {
+    const children = await this.childModel.find({ branchId }).populate('classCategoryId');
     const today = new Date();
     
     return children.filter(child => {

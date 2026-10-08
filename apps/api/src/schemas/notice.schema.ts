@@ -31,6 +31,9 @@ export class Notice {
   // If target is ADMIN, only admins can see it (used for parent updates)
   @Prop({ default: 'ALL' })
   target: 'ALL' | 'ADMIN';
+
+  @Prop({ type: Types.ObjectId, ref: 'Branch', required: true })
+  branchId: Types.ObjectId;
 }
 
 export const NoticeSchema = SchemaFactory.createForClass(Notice);

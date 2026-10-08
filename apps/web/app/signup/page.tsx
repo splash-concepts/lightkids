@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import AuthBranding from "../components/AuthBranding";
 import "./signup.css";
@@ -11,7 +11,10 @@ export default function Signup() {
     email: "",
     password: "",
     role: "PARENT",
+    branchId: "",
   });
+  const [branches, setBranches] = useState<any[]>([]);
+  const [loadingBranches, setLoadingBranches] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -19,6 +22,29 @@ export default function Signup() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/auth/branches`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setBranches(data);
+          if (data.length > 0) {
+            setFormData(prev => ({ ...prev, branchId: data[0]._id }));
+          }
+        } else {
+          setBranches([]);
+        }
+        setLoadingBranches(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch branches", err);
+        setBranches([]);
+        setLoadingBranches(false);
+      });
+  }, []);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,6 +148,17 @@ export default function Signup() {
                   <option value="PARENT">Parent</option>
                   <option value="MENTOR">Mentor / Teacher</option>
                   <option value="ADMIN">Administrator</option>
+                </select>
+              </div>
+
+              <div className="input-group">
+                <label htmlFor="branchId">Select Branch</label>
+                <select name="branchId" id="branchId" value={formData.branchId} onChange={handleChange} required>
+                  {loadingBranches && <option value="">Loading branches...</option>}
+                  {!loadingBranches && branches.length === 0 && <option value="">No branches available</option>}
+                  {branches.map(b => (
+                    <option key={b._id} value={b._id}>{b.name} {b.location ? `(${b.location})` : ''}</option>
+                  ))}
                 </select>
               </div>
 

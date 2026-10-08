@@ -10,6 +10,7 @@ import { ClassCategory, ClassCategorySchema } from './schemas/class-category.sch
 import { Attendance, AttendanceSchema } from './schemas/attendance.schema.js';
 import { HandoffLog, HandoffLogSchema } from './schemas/handoff-log.schema.js';
 import { AcademicMaterial, AcademicMaterialSchema } from './schemas/academic-material.schema.js';
+import { Branch, BranchSchema } from './schemas/branch.schema.js';
 
 import { AuthModule } from './auth/auth.module.js';
 import { ChildrenModule } from './children/children.module.js';
@@ -40,6 +41,7 @@ import { AdminModule } from './admin/admin.module.js';
       { name: Attendance.name, schema: AttendanceSchema },
       { name: HandoffLog.name, schema: HandoffLogSchema },
       { name: AcademicMaterial.name, schema: AcademicMaterialSchema },
+      { name: Branch.name, schema: BranchSchema },
     ]),
     AuthModule,
     ChildrenModule,

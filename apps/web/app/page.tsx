@@ -95,7 +95,10 @@ export default function Home() {
           <div className="action-card glass-panel">
             <h3 className="card-title">Quick Actions</h3>
             <div className="action-buttons">
-              {(user?.role === 'ADMIN') && (
+              {(user?.role === 'SUPER_ADMIN') && (
+                <Link href="/dashboard/super-admin" className="btn btn-primary hover-lift text-center" style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }}>Super Admin Control</Link>
+              )}
+              {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
                 <Link href="/dashboard/admin" className="btn btn-primary hover-lift text-center" style={{ background: 'var(--accent)', borderColor: 'var(--accent)' }}>Admin Dashboard</Link>
               )}
               {(user?.role === 'ADMIN' || user?.role === 'PARENT' || user?.role === 'MENTOR') && (

@@ -25,11 +25,12 @@ export class MaterialController {
       ...body,
       fileUrl: file ? `/uploads/materials/${file.filename}` : undefined,
       authorId: req.user.userId,
+      branchId: req.user.branchId,
     });
   }
 
   @Get('class/:classId')
-  async getByClass(@Param('classId') classId: string, @Query('type') type?: MaterialType) {
-    return this.materialService.getMaterialsByClass(classId, type);
+  async getByClass(@Param('classId') classId: string, @Query('type') type: MaterialType, @Req() req: any) {
+    return this.materialService.getMaterialsByClass(classId, req.user.branchId, type);
   }
 }

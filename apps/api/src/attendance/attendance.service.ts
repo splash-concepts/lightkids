@@ -7,7 +7,7 @@ import { Attendance, AttendanceDocument, AttendanceStatus } from '../schemas/att
 export class AttendanceService {
   constructor(@InjectModel(Attendance.name) private attendanceModel: Model<AttendanceDocument>) {}
 
-  async markAttendance(data: { childId: string; status: AttendanceStatus; reason?: string; loggedBy: string }) {
+  async markAttendance(data: { childId: string; status: AttendanceStatus; reason?: string; loggedBy: string; branchId: string }) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -19,20 +19,21 @@ export class AttendanceService {
     );
   }
 
-  async getAttendanceForClass(classId: string, date: Date) {
-    const records = await this.attendanceModel.find({ date: { $gte: date } }).populate({
+  async getAttendanceForClass(classId: string, date: Date, branchId: string) {
+    const records = await this.attendanceModel.find({ branchId, date: { $gte: date } }).populate({
       path: 'childId',
       match: { classCategoryId: classId },
     });
     return records.filter(record => record.childId !== null);
   }
 
-  async reportAbsence(childId: string, reason: string, parentId: string) {
+  async reportAbsence(childId: string, reason: string, parentId: string, branchId: string) {
     return this.markAttendance({
       childId,
       status: AttendanceStatus.ABSENT,
       reason,
       loggedBy: parentId,
+      branchId,
     });
   }
 }

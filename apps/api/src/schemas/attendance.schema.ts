@@ -24,6 +24,9 @@ export class Attendance {
 
   @Prop({ type: Types.ObjectId, ref: 'User' })
   loggedBy: Types.ObjectId; // Parent or Mentor
+
+  @Prop({ type: Types.ObjectId, ref: 'Branch', required: true })
+  branchId: Types.ObjectId;
 }
 
 export const AttendanceSchema = SchemaFactory.createForClass(Attendance);

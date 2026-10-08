@@ -18,12 +18,12 @@ export class ChildrenController {
   }))
   async register(@Body() body: any, @Req() req: any, @UploadedFiles() files: Array<Express.Multer.File>) {
     const caregiverImages = files?.map(f => `/uploads/caregivers/${f.filename}`) || [];
-    return this.childrenService.registerChild({ ...body, caregiverImages }, req.user.userId, req.user.role);
+    return this.childrenService.registerChild({ ...body, caregiverImages }, req.user.userId, req.user.role, req.user.branchId);
   }
 
   @Get('categories')
-  async getCategories() {
-    return this.childrenService.getCategories();
+  async getCategories(@Req() req: any) {
+    return this.childrenService.getCategories(req.user.branchId);
   }
 
   @Get('promotable')
@@ -31,7 +31,7 @@ export class ChildrenController {
     if (req.user.role !== 'ADMIN') {
       throw new UnauthorizedException('Only Admins can review promotions');
     }
-    return this.childrenService.getPromotableChildren();
+    return this.childrenService.getPromotableChildren(req.user.branchId);
   }
 
   @Patch(':id/promote')

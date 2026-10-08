@@ -28,6 +28,9 @@ export class AcademicMaterial {
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   authorId: Types.ObjectId; // Mentor who uploaded it
+
+  @Prop({ type: Types.ObjectId, ref: 'Branch', required: true })
+  branchId: Types.ObjectId;
 }
 
 export const AcademicMaterialSchema = SchemaFactory.createForClass(AcademicMaterial);

@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AdminService } from './admin.service.js';
 
@@ -8,27 +8,36 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   private checkAdmin(req: any) {
-    if (req.user.role !== 'ADMIN') {
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
       throw new UnauthorizedException('Admin access required');
+    }
+  }
+
+  private checkSuperAdmin(req: any) {
+    if (req.user.role !== 'SUPER_ADMIN') {
+      throw new UnauthorizedException('Super Admin access required');
     }
   }
 
   @Get('stats')
   async getStats(@Req() req: any) {
     this.checkAdmin(req);
-    return this.adminService.getStats();
+    const branchId = req.user.role === 'SUPER_ADMIN' ? undefined : req.user.branchId;
+    return this.adminService.getStats(branchId);
   }
 
   @Get('users')
   async getUsers(@Query('role') role: string, @Req() req: any) {
     this.checkAdmin(req);
-    return this.adminService.getUsers(role);
+    const branchId = req.user.role === 'SUPER_ADMIN' ? undefined : req.user.branchId;
+    return this.adminService.getUsers(role, branchId);
   }
 
   @Get('children')
   async getChildren(@Req() req: any) {
     this.checkAdmin(req);
-    return this.adminService.getChildren();
+    const branchId = req.user.role === 'SUPER_ADMIN' ? undefined : req.user.branchId;
+    return this.adminService.getChildren(branchId);
   }
 
   @Get('children/:id')
@@ -40,6 +49,44 @@ export class AdminController {
   @Get('attendance')
   async getAttendanceHistory(@Req() req: any) {
     this.checkAdmin(req);
-    return this.adminService.getAttendanceHistory();
+    const branchId = req.user.role === 'SUPER_ADMIN' ? undefined : req.user.branchId;
+    return this.adminService.getAttendanceHistory(branchId);
+  }
+
+  // Multi-Tenancy / Branch Management
+  @Post('branches')
+  async createBranch(@Body() body: { name: string; location?: string; contactEmail?: string }, @Req() req: any) {
+    this.checkSuperAdmin(req);
+    return this.adminService.createBranch(body);
+  }
+
+  @Get('branches')
+  async getBranches(@Req() req: any) {
+    this.checkSuperAdmin(req);
+    return this.adminService.getBranches();
+  }
+
+  // Class Management per Branch
+  @Post('class-categories')
+  async createClassCategory(@Body() body: { name: string; description?: string; branchId: string }, @Req() req: any) {
+    this.checkAdmin(req);
+    // If not SUPER_ADMIN, force the branchId to be the admin's branchId
+    if (req.user.role !== 'SUPER_ADMIN') {
+      body.branchId = req.user.branchId;
+    }
+    return this.adminService.createClassCategory(body);
+  }
+
+  @Get('class-categories')
+  async getClassCategories(@Query('branchId') branchId: string, @Req() req: any) {
+    this.checkAdmin(req);
+    const targetBranchId = req.user.role === 'SUPER_ADMIN' ? branchId : req.user.branchId;
+    return this.adminService.getClassCategories(targetBranchId);
+  }
+
+  @Patch('class-categories/:id')
+  async updateClassCategory(@Param('id') id: string, @Body() body: { name?: string; description?: string }, @Req() req: any) {
+    this.checkAdmin(req);
+    return this.adminService.updateClassCategory(id, body, req.user.branchId);
   }
 }

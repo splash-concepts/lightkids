@@ -16,12 +16,13 @@ export class AttendanceController {
     return this.attendanceService.markAttendance({
       ...body,
       loggedBy: req.user.userId,
+      branchId: req.user.branchId,
     });
   }
 
   @Post('report-absence')
   async reportAbsence(@Body() body: { childId: string, reason: string }, @Req() req: any) {
-    return this.attendanceService.reportAbsence(body.childId, body.reason, req.user.userId);
+    return this.attendanceService.reportAbsence(body.childId, body.reason, req.user.userId, req.user.branchId);
   }
 
   @Get('class/:classId/:date')
@@ -29,6 +30,6 @@ export class AttendanceController {
     if (req.user.role !== 'MENTOR' && req.user.role !== 'ADMIN') {
       throw new UnauthorizedException('Only Mentors and Admins can view class attendance');
     }
-    return this.attendanceService.getAttendanceForClass(classId, new Date(date));
+    return this.attendanceService.getAttendanceForClass(classId, new Date(date), req.user.branchId);
   }
 }

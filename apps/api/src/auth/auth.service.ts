@@ -7,15 +7,22 @@ import { OTP } from 'otplib';
 const authenticator = new OTP({ strategy: 'totp' });
 import { User, UserDocument, UserRole } from '../schemas/user.schema.js';
 
+import { Branch, BranchDocument } from '../schemas/branch.schema.js';
+
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Branch.name) private branchModel: Model<BranchDocument>,
     private jwtService: JwtService,
   ) {}
 
+  async getPublicBranches() {
+    return this.branchModel.find().select('name location').sort({ name: 1 });
+  }
+
   async register(data: any) {
-    const { name, email, password, role } = data;
+    const { name, email, password, role, branchId } = data;
     const existingUser = await this.userModel.findOne({ email });
     if (existingUser) throw new BadRequestException('Email already in use');
 
@@ -25,6 +32,7 @@ export class AuthService {
       email,
       password: hashedPassword,
       role,
+      branchId,
     });
     return { message: 'User registered successfully' };
   }
@@ -44,7 +52,7 @@ export class AuthService {
       if (!result.valid) throw new UnauthorizedException('Invalid 2FA token');
     }
 
-    const payload = { sub: user._id, email: user.email, role: user.role };
+    const payload = { sub: user._id, email: user.email, role: user.role, branchId: user.branchId };
     return {
       access_token: this.jwtService.sign(payload),
       role: user.role,

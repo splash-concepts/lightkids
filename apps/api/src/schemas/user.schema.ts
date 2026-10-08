@@ -1,9 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type UserDocument = User & Document;
 
 export enum UserRole {
+  SUPER_ADMIN = 'SUPER_ADMIN',
   ADMIN = 'ADMIN',
   MENTOR = 'MENTOR',
   PARENT = 'PARENT',
@@ -31,6 +32,9 @@ export class User {
 
   @Prop({ default: false })
   isTwoFactorEnabled: boolean;
+
+  @Prop({ type: Types.ObjectId, ref: 'Branch' })
+  branchId?: Types.ObjectId; // Optional because SUPER_ADMIN might not have a branch
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

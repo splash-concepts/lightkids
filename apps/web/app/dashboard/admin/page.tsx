@@ -111,6 +111,12 @@ export default function AdminDashboard() {
                 <p className="text-secondary mb-4">Review all past attendance records and logs.</p>
                 <Link href="/dashboard/admin/attendance" className="btn btn-secondary w-full">View Attendance Logs</Link>
               </div>
+
+              <div className="action-card glass-panel hover-lift">
+                <h3 className="card-title">Class Categories</h3>
+                <p className="text-secondary mb-4">Manage age groups and class assignments for your branch.</p>
+                <Link href="/dashboard/admin/classes" className="btn btn-primary w-full" style={{ background: 'var(--accent)', borderColor: 'var(--accent)' }}>Manage Classes</Link>
+              </div>
             </div>
           </section>
         )}

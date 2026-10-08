@@ -12,16 +12,16 @@ export class NoticesController {
     if (req.user.role !== 'ADMIN') {
       throw new UnauthorizedException('Only Admins can create events');
     }
-    return this.noticesService.createEvent(body, req.user.userId);
+    return this.noticesService.createEvent(body, req.user.userId, req.user.branchId);
   }
 
   @Post('update')
   async createParentUpdate(@Body() body: any, @Req() req: any) {
-    return this.noticesService.createParentUpdate(body, req.user.userId);
+    return this.noticesService.createParentUpdate(body, req.user.userId, req.user.branchId);
   }
 
   @Get()
   async getNotices(@Req() req: any) {
-    return this.noticesService.getNoticesForUser(req.user.userId, req.user.role);
+    return this.noticesService.getNoticesForUser(req.user.userId, req.user.role, req.user.branchId);
   }
 }
