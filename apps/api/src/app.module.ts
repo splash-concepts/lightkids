@@ -18,6 +18,7 @@ import { AttendanceModule } from './attendance/attendance.module.js';
 import { MaterialModule } from './material/material.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
 import { NoticesModule } from './notices/notices.module.js';
+import { AdminModule } from './admin/admin.module.js';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { NoticesModule } from './notices/notices.module.js';
     MaterialModule,
     NotificationsModule,
     NoticesModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

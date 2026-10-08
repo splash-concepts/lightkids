@@ -10,6 +10,7 @@ export default function RegisterChild() {
   const [error, setError] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -31,8 +32,13 @@ export default function RegisterChild() {
         } else {
           setCategories([]);
         }
+        setLoadingCategories(false);
       })
-      .catch(err => console.error("Failed to fetch categories", err));
+      .catch(err => {
+        console.error("Failed to fetch categories", err);
+        setCategories([]);
+        setLoadingCategories(false);
+      });
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -134,7 +140,8 @@ export default function RegisterChild() {
               <div className="input-group">
                 <label>Age Group</label>
                 <select name="classCategoryId" value={formData.classCategoryId} onChange={handleChange} required>
-                  {categories.length === 0 && <option value="">Loading...</option>}
+                  {loadingCategories && <option value="">Loading...</option>}
+                  {!loadingCategories && categories.length === 0 && <option value="">No categories available</option>}
                   {categories.map(cat => (
                     <option key={cat._id} value={cat._id}>{cat.name}</option>
                   ))}

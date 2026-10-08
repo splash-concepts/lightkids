@@ -38,10 +38,18 @@ export default function MaterialsPage() {
           if (data.length > 0) {
             setFormData(prev => ({ ...prev, classCategoryId: data[0]._id }));
             fetchMaterials(data[0]._id);
+          } else {
+            setLoading(false);
           }
         } else {
           setCategories([]);
+          setLoading(false);
         }
+      })
+      .catch(err => {
+        console.error("Failed to fetch categories", err);
+        setCategories([]);
+        setLoading(false);
       });
   }, []);
 

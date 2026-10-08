@@ -21,10 +21,18 @@ export default function AttendancePage() {
           if (data.length > 0) {
             setSelectedClass(data[0]._id);
             fetchChildren(data[0]._id);
+          } else {
+            setLoading(false);
           }
         } else {
           setCategories([]);
+          setLoading(false);
         }
+      })
+      .catch(err => {
+        console.error("Failed to fetch categories", err);
+        setCategories([]);
+        setLoading(false);
       });
   }, []);
 
