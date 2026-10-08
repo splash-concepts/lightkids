@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import "../../../page.css";
 import "../../mentor/mentor.css";
 
 export default function UserDirectory() {

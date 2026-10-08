@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import "../../page.css";
 import "./mentor.css";
 
 export default function MentorDashboard() {
