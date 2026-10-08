@@ -26,9 +26,6 @@ export default function RegisterChild() {
       .then(data => {
         if (Array.isArray(data)) {
           setCategories(data);
-          if (data.length > 0) {
-            setFormData(prev => ({ ...prev, classCategoryId: data[0]._id }));
-          }
         } else {
           setCategories([]);
         }
@@ -64,7 +61,7 @@ export default function RegisterChild() {
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
       formDataToSend.append("dob", formData.dob);
-      formDataToSend.append("classCategoryId", formData.classCategoryId);
+      // classCategoryId is intentionally omitted to allow backend auto-assignment based on dob
       formDataToSend.append("medicalInfo[allergies]", formData.allergies);
       formDataToSend.append("medicalInfo[emergencyContacts][0][name]", formData.emergencyContact);
       
@@ -138,14 +135,13 @@ export default function RegisterChild() {
                 <input type="date" name="dob" value={formData.dob} onChange={handleChange} required />
               </div>
               <div className="input-group">
-                <label>Age Group</label>
-                <select name="classCategoryId" value={formData.classCategoryId} onChange={handleChange} required>
-                  {loadingCategories && <option value="">Loading...</option>}
-                  {!loadingCategories && categories.length === 0 && <option value="">No categories available</option>}
-                  {categories.map(cat => (
-                    <option key={cat._id} value={cat._id}>{cat.name}</option>
-                  ))}
-                </select>
+                <label>Assigned Class</label>
+                <input 
+                  type="text" 
+                  value="Auto-assigned based on age" 
+                  disabled 
+                  style={{ opacity: 0.7, cursor: 'not-allowed' }}
+                />
               </div>
             </div>
           </div>

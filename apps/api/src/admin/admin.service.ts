@@ -74,10 +74,10 @@ export class AdminService {
     
     // Seed default class categories for the new branch
     const defaultClasses = [
-      { name: 'Wisdom class', description: 'Ages 1-3', branchId: branch._id },
-      { name: 'Victory class', description: 'Ages 4-6', branchId: branch._id },
-      { name: 'Faith class', description: 'Ages 7-9', branchId: branch._id },
-      { name: 'Light class', description: 'Ages 10-12', branchId: branch._id },
+      { name: 'Wisdom class', description: 'Ages 1-3', branchId: branch._id, ageMin: 1, ageMax: 3 },
+      { name: 'Victory class', description: 'Ages 4-6', branchId: branch._id, ageMin: 4, ageMax: 6 },
+      { name: 'Faith class', description: 'Ages 7-9', branchId: branch._id, ageMin: 7, ageMax: 9 },
+      { name: 'Light class', description: 'Ages 10-12', branchId: branch._id, ageMin: 10, ageMax: 12 },
     ];
     await this.classCategoryModel.insertMany(defaultClasses);
     
@@ -89,7 +89,7 @@ export class AdminService {
   }
 
   // Class Management per Branch
-  async createClassCategory(data: { name: string; description?: string; branchId: string }) {
+  async createClassCategory(data: { name: string; description?: string; branchId: string; ageMin?: number; ageMax?: number }) {
     return this.classCategoryModel.create(data);
   }
 
@@ -97,7 +97,7 @@ export class AdminService {
     return this.classCategoryModel.find({ branchId }).populate('mentorIds', 'name email').sort({ name: 1 });
   }
 
-  async updateClassCategory(id: string, data: { name?: string; description?: string; mentorIds?: string[] }, branchId: string) {
+  async updateClassCategory(id: string, data: { name?: string; description?: string; mentorIds?: string[]; ageMin?: number; ageMax?: number }, branchId: string) {
     // We enforce branchId to ensure an Admin can only edit classes in their branch
     return this.classCategoryModel.findOneAndUpdate(
       { _id: id, branchId },

@@ -10,11 +10,11 @@ export default function AdminClassesDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   
-  const [newClass, setNewClass] = useState({ name: "", description: "" });
+  const [newClass, setNewClass] = useState({ name: "", description: "", ageMin: 1, ageMax: 3 });
   const [creating, setCreating] = useState(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<{ name: string; description: string; mentorIds: string[] }>({ name: "", description: "", mentorIds: [] });
+  const [editForm, setEditForm] = useState<{ name: string; description: string; mentorIds: string[]; ageMin: number; ageMax: number }>({ name: "", description: "", mentorIds: [], ageMin: 0, ageMax: 0 });
   const [updating, setUpdating] = useState(false);
 
   const fetchClasses = async (token: string) => {
@@ -71,7 +71,7 @@ export default function AdminClassesDashboard() {
       if (!res.ok) throw new Error("Failed to create class category");
       
       await fetchClasses(token as string);
-      setNewClass({ name: "", description: "" });
+      setNewClass({ name: "", description: "", ageMin: 1, ageMax: 3 });
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -81,7 +81,13 @@ export default function AdminClassesDashboard() {
 
   const startEditing = (cls: any) => {
     setEditingId(cls._id);
-    setEditForm({ name: cls.name, description: cls.description || "", mentorIds: cls.mentorIds?.map((m: any) => m._id || m) || [] });
+    setEditForm({ 
+      name: cls.name, 
+      description: cls.description || "", 
+      mentorIds: cls.mentorIds?.map((m: any) => m._id || m) || [],
+      ageMin: cls.ageMin || 0,
+      ageMax: cls.ageMax || 0
+    });
   };
 
   const handleMentorToggle = (mentorId: string) => {
@@ -160,6 +166,28 @@ export default function AdminClassesDashboard() {
                   style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }}
                 />
               </div>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Min Age (Years)</label>
+                  <input 
+                    type="number" 
+                    value={newClass.ageMin} 
+                    onChange={e => setNewClass({...newClass, ageMin: parseInt(e.target.value) || 0})} 
+                    required 
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>Max Age (Years)</label>
+                  <input 
+                    type="number" 
+                    value={newClass.ageMax} 
+                    onChange={e => setNewClass({...newClass, ageMax: parseInt(e.target.value) || 0})} 
+                    required 
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-main)' }}
+                  />
+                </div>
+              </div>
               <button type="submit" className="btn btn-primary" disabled={creating}>
                 {creating ? "Creating..." : "Create Class"}
               </button>
@@ -207,6 +235,28 @@ export default function AdminClassesDashboard() {
                             onChange={e => setEditForm({...editForm, description: e.target.value})} 
                             style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'white' }}
                           />
+                        </div>
+                        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Min Age</label>
+                            <input 
+                              type="number" 
+                              value={editForm.ageMin} 
+                              onChange={e => setEditForm({...editForm, ageMin: parseInt(e.target.value) || 0})} 
+                              required 
+                              style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'white' }}
+                            />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Max Age</label>
+                            <input 
+                              type="number" 
+                              value={editForm.ageMax} 
+                              onChange={e => setEditForm({...editForm, ageMax: parseInt(e.target.value) || 0})} 
+                              required 
+                              style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'white' }}
+                            />
+                          </div>
                         </div>
                         <div style={{ marginBottom: '1rem' }}>
                           <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Assign Mentors</label>

@@ -6,10 +6,16 @@ export type ClassCategoryDocument = ClassCategory & Document;
 @Schema({ timestamps: true })
 export class ClassCategory {
   @Prop({ required: true })
-  name: string; // e.g. "0-2", "2-6", "7-9", "10-12"
+  name: string; // e.g. "Wisdom Class"
 
   @Prop()
   description?: string;
+
+  @Prop()
+  ageMin?: number;
+
+  @Prop()
+  ageMax?: number;
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }] })
   mentorIds: Types.ObjectId[];

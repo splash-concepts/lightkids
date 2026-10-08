@@ -28,6 +28,16 @@ export class ChildrenService {
       data.parentIds = [...(data.parentIds || []), userId];
     }
 
+    if (data.dob && !data.classCategoryId) {
+      const today = new Date();
+      const ageInYears = (today.getTime() - new Date(data.dob).getTime()) / (1000 * 3600 * 24 * 365.25);
+      const categories = await this.classCategoryModel.find({ branchId });
+      const matchedCategory = categories.find(c => ageInYears >= (c.ageMin || 0) && ageInYears < (c.ageMax ? c.ageMax + 1 : 999));
+      if (matchedCategory) {
+        data.classCategoryId = matchedCategory._id;
+      }
+    }
+
     const child = await this.childModel.create({
       ...data,
       uniqueCode,
@@ -45,9 +55,7 @@ export class ChildrenService {
       const category: any = child.classCategoryId;
       
       if (!category) return false;
-      if (category.name === "0-2" && ageInYears >= 3) return true;
-      if (category.name === "2-6" && ageInYears >= 7) return true;
-      if (category.name === "7-9" && ageInYears >= 10) return true;
+      if (category.ageMax && ageInYears >= (category.ageMax + 1)) return true;
       return false;
     });
   }

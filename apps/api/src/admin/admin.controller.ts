@@ -68,7 +68,7 @@ export class AdminController {
 
   // Class Management per Branch
   @Post('class-categories')
-  async createClassCategory(@Body() body: { name: string; description?: string; branchId: string }, @Req() req: any) {
+  async createClassCategory(@Body() body: { name: string; description?: string; branchId: string; ageMin?: number; ageMax?: number }, @Req() req: any) {
     this.checkAdmin(req);
     // If not SUPER_ADMIN, force the branchId to be the admin's branchId
     if (req.user.role !== 'SUPER_ADMIN') {
@@ -85,7 +85,7 @@ export class AdminController {
   }
 
   @Patch('class-categories/:id')
-  async updateClassCategory(@Param('id') id: string, @Body() body: { name?: string; description?: string; mentorIds?: string[] }, @Req() req: any) {
+  async updateClassCategory(@Param('id') id: string, @Body() body: { name?: string; description?: string; mentorIds?: string[]; ageMin?: number; ageMax?: number }, @Req() req: any) {
     this.checkAdmin(req);
     return this.adminService.updateClassCategory(id, body, req.user.branchId);
   }
