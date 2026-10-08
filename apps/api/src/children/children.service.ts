@@ -11,8 +11,12 @@ export class ChildrenService {
     @InjectModel(ClassCategory.name) private classCategoryModel: Model<ClassCategoryDocument>
   ) {}
 
-  async getCategories(branchId: string) {
-    return this.classCategoryModel.find({ branchId }).sort({ ageMin: 1 });
+  async getCategories(branchId: string, mentorId?: string) {
+    const filter: any = { branchId };
+    if (mentorId) {
+      filter.mentorIds = mentorId;
+    }
+    return this.classCategoryModel.find(filter).sort({ name: 1 });
   }
 
   async registerChild(data: any, userId: string, role: string, branchId: string) {
@@ -57,7 +61,7 @@ export class ChildrenService {
   }
 
   async getChildrenByClass(classCategoryId: string) {
-    return this.childModel.find({ classCategoryId });
+    return this.childModel.find({ classCategoryId }).populate('parentIds', 'name email phoneNumber whatsappNumber');
   }
 
   async updateMedicalInfo(childId: string, medicalInfo: any) {

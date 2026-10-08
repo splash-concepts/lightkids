@@ -94,10 +94,10 @@ export class AdminService {
   }
 
   async getClassCategories(branchId: string) {
-    return this.classCategoryModel.find({ branchId }).sort({ name: 1 });
+    return this.classCategoryModel.find({ branchId }).populate('mentorIds', 'name email').sort({ name: 1 });
   }
 
-  async updateClassCategory(id: string, data: { name?: string; description?: string }, branchId: string) {
+  async updateClassCategory(id: string, data: { name?: string; description?: string; mentorIds?: string[] }, branchId: string) {
     // We enforce branchId to ensure an Admin can only edit classes in their branch
     return this.classCategoryModel.findOneAndUpdate(
       { _id: id, branchId },

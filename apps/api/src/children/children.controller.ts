@@ -23,7 +23,8 @@ export class ChildrenController {
 
   @Get('categories')
   async getCategories(@Req() req: any) {
-    return this.childrenService.getCategories(req.user.branchId);
+    const isMentor = req.user.role === 'MENTOR';
+    return this.childrenService.getCategories(req.user.branchId, isMentor ? req.user.userId : undefined);
   }
 
   @Get('promotable')

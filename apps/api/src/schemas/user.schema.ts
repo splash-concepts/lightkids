@@ -22,6 +22,12 @@ export class User {
   @Prop({ required: true })
   password?: string; // Hashed password
 
+  @Prop()
+  phoneNumber?: string;
+
+  @Prop()
+  whatsappNumber?: string;
+
   @Prop({ required: true, enum: UserRole })
   role: UserRole;
 

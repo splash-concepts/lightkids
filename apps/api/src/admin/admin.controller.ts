@@ -85,7 +85,7 @@ export class AdminController {
   }
 
   @Patch('class-categories/:id')
-  async updateClassCategory(@Param('id') id: string, @Body() body: { name?: string; description?: string }, @Req() req: any) {
+  async updateClassCategory(@Param('id') id: string, @Body() body: { name?: string; description?: string; mentorIds?: string[] }, @Req() req: any) {
     this.checkAdmin(req);
     return this.adminService.updateClassCategory(id, body, req.user.branchId);
   }

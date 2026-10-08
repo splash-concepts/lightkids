@@ -3,19 +3,20 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import AuthBranding from "../components/AuthBranding";
-import "./signup.css";
+import "../signup/signup.css";
 
-export default function Signup() {
+export default function StaffSignup() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    role: "PARENT",
+    role: "MENTOR",
     branchId: "",
-    phoneNumber: "",
-    whatsappNumber: "",
   });
-  const [sameAsPhone, setSameAsPhone] = useState(true);
+  
+  const [passcode, setPasscode] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
   const [branches, setBranches] = useState<any[]>([]);
   const [loadingBranches, setLoadingBranches] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -23,27 +24,12 @@ export default function Signup() {
   const [success, setSuccess] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => {
-      const newData = { ...prev, [name]: value };
-      if (name === 'phoneNumber' && sameAsPhone) {
-        newData.whatsappNumber = value;
-      }
-      return newData;
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked;
-    setSameAsPhone(checked);
-    if (checked) {
-      setFormData(prev => ({ ...prev, whatsappNumber: prev.phoneNumber }));
-    }
-  };
-
-
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+    
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/auth/branches`)
       .then(res => res.json())
       .then(data => {
@@ -62,7 +48,17 @@ export default function Signup() {
         setBranches([]);
         setLoadingBranches(false);
       });
-  }, []);
+  }, [isAuthenticated]);
+
+  const handleAuth = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passcode === "LIGHTKIDS_STAFF_2026") {
+      setIsAuthenticated(true);
+      setError("");
+    } else {
+      setError("Invalid staff passcode");
+    }
+  };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,6 +90,35 @@ export default function Signup() {
     }
   };
 
+  if (!isAuthenticated) {
+    return (
+      <div className="signup-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div className="signup-card glass-panel" style={{ maxWidth: '400px', width: '100%', padding: '2rem' }}>
+          <h2 style={{ marginBottom: '1rem', color: 'var(--text-main)' }}>Staff Portal Access</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Enter the staff registration code to continue.</p>
+          
+          {error && <div className="error-alert">{error}</div>}
+          
+          <form onSubmit={handleAuth}>
+            <div className="input-group">
+              <input 
+                type="password" 
+                placeholder="Passcode" 
+                value={passcode} 
+                onChange={(e) => setPasscode(e.target.value)} 
+                required 
+              />
+            </div>
+            <button type="submit" className="btn btn-primary w-full">Verify Code</button>
+          </form>
+          <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+            <Link href="/" className="login-link">← Return to Home</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="signup-container">
       <div className="signup-layout">
@@ -103,9 +128,9 @@ export default function Signup() {
           <Link href="/" className="back-link">← Back to Dashboard</Link>
           <div className="signup-card animate-fade-in">
             <div className="signup-header">
-              <div className="logo-icon">L</div>
-              <h2>Create an Account</h2>
-              <p>Join the Light Kids community</p>
+              <div className="logo-icon" style={{ background: 'var(--accent)' }}>L</div>
+              <h2>Staff Registration</h2>
+              <p>Join the Light Kids administrative team</p>
             </div>
 
             {error && (
@@ -160,45 +185,14 @@ export default function Signup() {
                 />
               </div>
 
-
-
               <div className="input-group">
-                <label htmlFor="phoneNumber">Phone Number (Call Line)</label>
-                <input 
-                  type="tel" 
-                  name="phoneNumber" 
-                  id="phoneNumber" 
-                  placeholder="+1234567890" 
-                  required 
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                />
+                <label htmlFor="role">Staff Role</label>
+                <select name="role" id="role" value={formData.role} onChange={handleChange} required>
+                  <option value="MENTOR">Mentor / Teacher</option>
+                  <option value="MINISTER">Minister</option>
+                  <option value="ADMIN">Administrator</option>
+                </select>
               </div>
-
-              <div className="input-group" style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <input 
-                  type="checkbox" 
-                  id="sameAsPhone" 
-                  checked={sameAsPhone} 
-                  onChange={handleCheckboxChange} 
-                  style={{ width: 'auto', marginBottom: 0 }}
-                />
-                <label htmlFor="sameAsPhone" style={{ marginBottom: 0, fontSize: '0.9rem' }}>WhatsApp is same as Call Line</label>
-              </div>
-
-              {!sameAsPhone && (
-                <div className="input-group">
-                  <label htmlFor="whatsappNumber">WhatsApp Number</label>
-                  <input 
-                    type="tel" 
-                    name="whatsappNumber" 
-                    id="whatsappNumber" 
-                    placeholder="+1234567890" 
-                    value={formData.whatsappNumber}
-                    onChange={handleChange}
-                  />
-                </div>
-              )}
 
               <div className="input-group">
                 <label htmlFor="branchId">Select Branch</label>
@@ -211,8 +205,8 @@ export default function Signup() {
                 </select>
               </div>
 
-              <button type="submit" className="btn btn-primary signup-btn hover-lift" disabled={loading}>
-                {loading ? "Creating Account..." : "Sign Up"}
+              <button type="submit" className="btn btn-primary signup-btn hover-lift" disabled={loading} style={{ background: 'var(--accent)', borderColor: 'var(--accent)' }}>
+                {loading ? "Creating Account..." : "Complete Registration"}
               </button>
             </form>
 

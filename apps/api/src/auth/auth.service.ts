@@ -22,7 +22,7 @@ export class AuthService {
   }
 
   async register(data: any) {
-    const { name, email, password, role, branchId } = data;
+    const { name, email, password, role, branchId, phoneNumber, whatsappNumber } = data;
     const existingUser = await this.userModel.findOne({ email });
     if (existingUser) throw new BadRequestException('Email already in use');
 
@@ -33,6 +33,8 @@ export class AuthService {
       password: hashedPassword,
       role,
       branchId,
+      phoneNumber,
+      whatsappNumber,
     });
     return { message: 'User registered successfully' };
   }

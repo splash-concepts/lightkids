@@ -6,6 +6,7 @@ import "../../../page.css"; // Reuse dashboard styles
 
 export default function AdminClassesDashboard() {
   const [classes, setClasses] = useState<any[]>([]);
+  const [mentors, setMentors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   
@@ -13,7 +14,7 @@ export default function AdminClassesDashboard() {
   const [creating, setCreating] = useState(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", description: "" });
+  const [editForm, setEditForm] = useState<{ name: string; description: string; mentorIds: string[] }>({ name: "", description: "", mentorIds: [] });
   const [updating, setUpdating] = useState(false);
 
   const fetchClasses = async (token: string) => {
@@ -24,6 +25,14 @@ export default function AdminClassesDashboard() {
       if (!res.ok) throw new Error("Failed to fetch classes");
       const data = await res.json();
       setClasses(data);
+
+      const mentorsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/users?role=MENTOR`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (mentorsRes.ok) {
+        const mentorsData = await mentorsRes.json();
+        setMentors(mentorsData);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -72,7 +81,15 @@ export default function AdminClassesDashboard() {
 
   const startEditing = (cls: any) => {
     setEditingId(cls._id);
-    setEditForm({ name: cls.name, description: cls.description || "" });
+    setEditForm({ name: cls.name, description: cls.description || "", mentorIds: cls.mentorIds?.map((m: any) => m._id || m) || [] });
+  };
+
+  const handleMentorToggle = (mentorId: string) => {
+    setEditForm(prev => {
+      const isAssigned = prev.mentorIds.includes(mentorId);
+      if (isAssigned) return { ...prev, mentorIds: prev.mentorIds.filter(id => id !== mentorId) };
+      return { ...prev, mentorIds: [...prev.mentorIds, mentorId] };
+    });
   };
 
   const handleUpdateClass = async (e: React.FormEvent, id: string) => {
@@ -161,8 +178,14 @@ export default function AdminClassesDashboard() {
                       <div>
                         <h4 style={{ color: 'var(--text-main)', fontSize: '1.1rem', marginBottom: '0.25rem' }}>{cls.name}</h4>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{cls.description || 'No description'}</p>
+                        {cls.mentorIds && cls.mentorIds.length > 0 && (
+                          <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                            <strong>Assigned Mentors: </strong>
+                            {cls.mentorIds.map((m: any) => m.name).join(", ")}
+                          </div>
+                        )}
                       </div>
-                      <button onClick={() => startEditing(cls)} className="btn btn-outline btn-sm">Edit Alias</button>
+                      <button onClick={() => startEditing(cls)} className="btn btn-outline btn-sm">Edit & Assign</button>
                     </div>
                     {editingId === cls._id && (
                       <form onSubmit={(e) => handleUpdateClass(e, cls._id)} style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
@@ -184,6 +207,21 @@ export default function AdminClassesDashboard() {
                             onChange={e => setEditForm({...editForm, description: e.target.value})} 
                             style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'white' }}
                           />
+                        </div>
+                        <div style={{ marginBottom: '1rem' }}>
+                          <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Assign Mentors</label>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '150px', overflowY: 'auto', background: 'var(--bg-main)', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+                            {mentors.length === 0 ? <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>No mentors available.</p> : mentors.map(mentor => (
+                              <label key={mentor._id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer' }}>
+                                <input 
+                                  type="checkbox" 
+                                  checked={editForm.mentorIds.includes(mentor._id)}
+                                  onChange={() => handleMentorToggle(mentor._id)}
+                                />
+                                {mentor.name}
+                              </label>
+                            ))}
+                          </div>
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                           <button type="submit" className="btn btn-primary btn-sm" disabled={updating}>{updating ? "Saving..." : "Save"}</button>
