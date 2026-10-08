@@ -23,9 +23,13 @@ export default function RegisterChild() {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/categories`)
       .then(res => res.json())
       .then(data => {
-        setCategories(data);
-        if (data.length > 0) {
-          setFormData(prev => ({ ...prev, classCategoryId: data[0]._id }));
+        if (Array.isArray(data)) {
+          setCategories(data);
+          if (data.length > 0) {
+            setFormData(prev => ({ ...prev, classCategoryId: data[0]._id }));
+          }
+        } else {
+          setCategories([]);
         }
       })
       .catch(err => console.error("Failed to fetch categories", err));

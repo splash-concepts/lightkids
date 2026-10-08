@@ -16,10 +16,14 @@ export default function AttendancePage() {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/categories`)
       .then(res => res.json())
       .then(data => {
-        setCategories(data);
-        if (data.length > 0) {
-          setSelectedClass(data[0]._id);
-          fetchChildren(data[0]._id);
+        if (Array.isArray(data)) {
+          setCategories(data);
+          if (data.length > 0) {
+            setSelectedClass(data[0]._id);
+            fetchChildren(data[0]._id);
+          }
+        } else {
+          setCategories([]);
         }
       });
   }, []);
@@ -31,7 +35,11 @@ export default function AttendancePage() {
         headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
       });
       const data = await response.json();
-      setChildren(data);
+      if (Array.isArray(data)) {
+        setChildren(data);
+      } else {
+        setChildren([]);
+      }
     } catch (err) {
       console.error(err);
     } finally {

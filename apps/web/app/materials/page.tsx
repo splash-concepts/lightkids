@@ -33,10 +33,14 @@ export default function MaterialsPage() {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/categories`)
       .then(res => res.json())
       .then(data => {
-        setCategories(data);
-        if (data.length > 0) {
-          setFormData(prev => ({ ...prev, classCategoryId: data[0]._id }));
-          fetchMaterials(data[0]._id);
+        if (Array.isArray(data)) {
+          setCategories(data);
+          if (data.length > 0) {
+            setFormData(prev => ({ ...prev, classCategoryId: data[0]._id }));
+            fetchMaterials(data[0]._id);
+          }
+        } else {
+          setCategories([]);
         }
       });
   }, []);
@@ -48,7 +52,11 @@ export default function MaterialsPage() {
         headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
       });
       const data = await response.json();
-      setMaterials(data);
+      if (Array.isArray(data)) {
+        setMaterials(data);
+      } else {
+        setMaterials([]);
+      }
     } catch (err) {
       console.error(err);
     } finally {
