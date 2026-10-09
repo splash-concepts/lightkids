@@ -8,6 +8,11 @@ export enum HandoffType {
   PICK_UP = 'PICK_UP',
 }
 
+export enum HandoffStatus {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+}
+
 @Schema({ timestamps: true })
 export class HandoffLog {
   @Prop({ type: Types.ObjectId, ref: 'Child', required: true })
@@ -18,6 +23,9 @@ export class HandoffLog {
 
   @Prop({ required: true })
   time: Date;
+
+  @Prop({ enum: HandoffStatus, default: HandoffStatus.COMPLETED })
+  status: HandoffStatus;
 
   @Prop({ required: true })
   verifiedByCode: string; // 6-digit code used

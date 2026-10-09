@@ -47,17 +47,15 @@
   --font-display: 'Outfit', 'Inter', sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-main: #0F172A;
-    --bg-surface: #1E293B;
-    --bg-surface-glass: rgba(30, 41, 59, 0.7);
-    --text-primary: #F8FAFC;
-    --text-secondary: #94A3B8;
-    --border-light: #334155;
-    --border-glass: rgba(255, 255, 255, 0.05);
-    --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-  }
+:root.dark {
+  --bg-main: #0F172A;
+  --bg-surface: #1E293B;
+  --bg-surface-glass: rgba(30, 41, 59, 0.7);
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --border-light: #334155;
+  --border-glass: rgba(255, 255, 255, 0.05);
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -161,4 +159,40 @@ button {
 
 .animate-fade-in {
   animation: fadeIn 0.5s var(--transition-bounce) forwards;
+}
+
+/* Forms (Global) */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.input-group label {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.input-group input,
+.input-group select,
+.input-group textarea {
+  padding: 0.85rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  width: 100%;
+}
+
+.input-group input:focus,
+.input-group select:focus,
+.input-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }

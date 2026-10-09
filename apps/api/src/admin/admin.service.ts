@@ -54,11 +54,11 @@ export class AdminService {
 
   async getChildren(branchId?: string) {
     const filter = branchId ? { branchId } : {};
-    return this.childModel.find(filter).populate('classCategoryId').populate('parentIds', 'name email').sort({ createdAt: -1 });
+    return this.childModel.find(filter).populate('classCategoryId').populate('parentIds', 'name email phoneNumber whatsappNumber').sort({ createdAt: -1 });
   }
 
   async getChild(id: string) {
-    const child = await this.childModel.findById(id).populate('classCategoryId').populate('parentIds', 'name email');
+    const child = await this.childModel.findById(id).populate('classCategoryId').populate('parentIds', 'name email phoneNumber whatsappNumber');
     const attendance = await this.attendanceModel.find({ childId: id }).sort({ date: -1 });
     return { child, attendance };
   }

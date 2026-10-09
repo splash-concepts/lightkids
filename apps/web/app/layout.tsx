@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ThemeToggle from "./components/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "Light Kids - Child Management System",
@@ -20,6 +21,7 @@ export default function RootLayout({
       <body>
         <main className="app-main">
           {children}
+          <ThemeToggle />
         </main>
       </body>
     </html>

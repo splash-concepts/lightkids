@@ -57,7 +57,7 @@ export default function ChildrenDirectory() {
                     Parents: {child.parentIds?.map((p: any) => p.name).join(', ') || 'N/A'}
                   </p>
                   <div style={{ marginTop: '1.5rem' }}>
-                    {/* Add link to child profile details if needed */}
+                    <Link href={`/children/${child._id}`} className="btn btn-secondary btn-sm">View Full Profile</Link>
                   </div>
                 </div>
               ))}
