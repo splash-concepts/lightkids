@@ -11,6 +11,7 @@ export default function MaterialsPage() {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [role, setRole] = useState("PARENT");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Form State
   const [file, setFile] = useState<File | null>(null);
@@ -189,9 +190,17 @@ export default function MaterialsPage() {
                       <small>Posted by {mat.authorId?.name || "Admin"} • {new Date(mat.createdAt).toLocaleDateString()}</small>
                     </div>
                     {mat.fileUrl && (
-                      <a href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${mat.fileUrl}`} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm">
-                        Download
-                      </a>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <button 
+                          onClick={() => setPreviewUrl(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${mat.fileUrl}`)}
+                          className="btn btn-secondary btn-sm"
+                        >
+                          View Document
+                        </button>
+                        <a href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${mat.fileUrl}`} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm">
+                          Download
+                        </a>
+                      </div>
                     )}
                   </div>
                 ))
@@ -200,6 +209,31 @@ export default function MaterialsPage() {
           </div>
         </div>
       </div>
+
+      {/* Document Preview Modal */}
+      {previewUrl && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.8)', zIndex: 9999,
+          display: 'flex', flexDirection: 'column', padding: '2rem'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+            <button onClick={() => setPreviewUrl(null)} className="btn btn-outline" style={{ background: 'white', color: 'black' }}>Close Preview</button>
+          </div>
+          <div style={{ flex: 1, background: 'white', borderRadius: '8px', overflow: 'hidden' }}>
+            {previewUrl.toLowerCase().endsWith('.pdf') ? (
+              <iframe src={previewUrl} style={{ width: '100%', height: '100%', border: 'none' }} title="Document Preview" />
+            ) : previewUrl.toLowerCase().endsWith('.docx') || previewUrl.toLowerCase().endsWith('.doc') ? (
+              <iframe src={`https://docs.google.com/gview?url=${encodeURIComponent(previewUrl)}&embedded=true`} style={{ width: '100%', height: '100%', border: 'none' }} title="Document Preview" />
+            ) : (
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'black' }}>
+                <h3>Preview not available for this file type</h3>
+                <a href={previewUrl} target="_blank" rel="noreferrer" className="btn btn-primary" style={{ marginTop: '1rem' }}>Download Instead</a>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

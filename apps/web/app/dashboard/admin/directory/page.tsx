@@ -42,7 +42,8 @@ export default function UserDirectory() {
     setLoading(true);
     const token = localStorage.getItem("token");
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/users?role=${role}`, {
-      headers: { "Authorization": `Bearer ${token}` }
+      headers: { "Authorization": `Bearer ${token}` },
+      cache: "no-store"
     })
       .then(res => res.json())
       .then(data => {

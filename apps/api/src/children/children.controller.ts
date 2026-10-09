@@ -1,8 +1,8 @@
 import { Controller, Post, Body, Get, Param, Patch, UseGuards, Req, UseInterceptors, UploadedFiles, UnauthorizedException } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { ChildrenService } from './children.service.js';
-import { diskStorage } from 'multer';
+import { getCloudinaryStorage } from '../utils/cloudinary.util.js';
 
 @Controller('children')
 @UseGuards(AuthGuard('jwt'))
@@ -10,15 +10,21 @@ export class ChildrenController {
   constructor(private readonly childrenService: ChildrenService) {}
 
   @Post()
-  @UseInterceptors(FilesInterceptor('caregiverImages', 5, {
-    storage: diskStorage({
-      destination: './uploads/caregivers',
-      filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
-    })
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'childImage', maxCount: 1 },
+    { name: 'caregiverImages', maxCount: 5 }
+  ], {
+    storage: getCloudinaryStorage('caregivers')
   }))
-  async register(@Body() body: any, @Req() req: any, @UploadedFiles() files: Array<Express.Multer.File>) {
-    const caregiverImages = files?.map(f => `/uploads/caregivers/${f.filename}`) || [];
-    return this.childrenService.registerChild({ ...body, caregiverImages }, req.user.userId, req.user.role, req.user.branchId);
+  async register(@Body() body: any, @Req() req: any, @UploadedFiles() files: { childImage?: Express.Multer.File[], caregiverImages?: Express.Multer.File[] }) {
+    const childImage = files?.childImage?.[0]?.path || files?.childImage?.[0]?.filename ? `/uploads/caregivers/${files.childImage[0].filename}` : null;
+    const caregiverImages = files?.caregiverImages?.map(f => f.path || `/uploads/caregivers/${f.filename}`) || [];
+    
+    // Support Cloudinary URLs natively if path is a URL (Cloudinary storage populates .path with URL)
+    const profileImage = files?.childImage?.[0]?.path?.startsWith('http') ? files.childImage[0].path : childImage;
+    const resolvedCaregiverImages = files?.caregiverImages?.map(f => f.path?.startsWith('http') ? f.path : `/uploads/caregivers/${f.filename}`) || caregiverImages;
+
+    return this.childrenService.registerChild({ ...body, profileImage, caregiverImages: resolvedCaregiverImages }, req.user.userId, req.user.role, req.user.branchId);
   }
 
   @Get('categories')

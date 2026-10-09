@@ -12,7 +12,8 @@ export default function ChildrenDirectory() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/children`, {
-      headers: { "Authorization": `Bearer ${token}` }
+      headers: { "Authorization": `Bearer ${token}` },
+      cache: "no-store"
     })
       .then(res => res.json())
       .then(data => {

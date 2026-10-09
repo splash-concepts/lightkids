@@ -13,6 +13,12 @@ export class AdminController {
     }
   }
 
+  private checkStaff(req: any) {
+    if (req.user.role === 'PARENT') {
+      throw new UnauthorizedException('Staff access required');
+    }
+  }
+
   private checkSuperAdmin(req: any) {
     if (req.user.role !== 'SUPER_ADMIN') {
       throw new UnauthorizedException('Super Admin access required');
@@ -28,14 +34,14 @@ export class AdminController {
 
   @Get('users')
   async getUsers(@Query('role') role: string, @Req() req: any) {
-    this.checkAdmin(req);
+    this.checkStaff(req);
     const branchId = req.user.role === 'SUPER_ADMIN' ? undefined : req.user.branchId;
     return this.adminService.getUsers(role, branchId);
   }
 
   @Get('children')
   async getChildren(@Req() req: any) {
-    this.checkAdmin(req);
+    this.checkStaff(req);
     const branchId = req.user.role === 'SUPER_ADMIN' ? undefined : req.user.branchId;
     return this.adminService.getChildren(branchId);
   }

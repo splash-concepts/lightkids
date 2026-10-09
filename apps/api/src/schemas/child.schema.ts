@@ -8,6 +8,9 @@ export class Child {
   @Prop({ required: true })
   name: string;
 
+  @Prop()
+  profileImage?: string;
+
   @Prop({ required: true })
   dob: Date; // Important for age cross promotions
 
@@ -18,7 +21,10 @@ export class Child {
   parentIds: Types.ObjectId[];
 
   @Prop({ type: [String] })
-  caregiverImages: string[]; // URLs for nanny/self images
+  caregiverImages: string[]; // Legacy/Generic URLs for nanny/self images
+
+  @Prop({ type: [{ name: String, relation: String, image: String }] })
+  caregivers: Array<{ name: string; relation: string; image: string }>;
 
   @Prop({ required: true, unique: true })
   uniqueCode: string; // 6-digit code for handoff

@@ -8,9 +8,12 @@ export default function RegisterChild() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [childImageFile, setChildImageFile] = useState<File | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [parents, setParents] = useState<any[]>([]);
+  const [currentUserRole, setCurrentUserRole] = useState("PARENT");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -18,9 +21,26 @@ export default function RegisterChild() {
     classCategoryId: "",
     allergies: "",
     emergencyContact: "",
+    parentId: "",
   });
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1] as string));
+        setCurrentUserRole(payload.role);
+        if (payload.role !== "PARENT") {
+          fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/users?role=PARENT`, {
+             headers: { "Authorization": `Bearer ${token}` }
+          })
+          .then(res => res.json())
+          .then(data => { if (Array.isArray(data)) setParents(data); })
+          .catch(console.error);
+        }
+      } catch(e) {}
+    }
+
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/categories`)
       .then(res => res.json())
       .then(data => {
@@ -65,6 +85,14 @@ export default function RegisterChild() {
       formDataToSend.append("medicalInfo[allergies]", formData.allergies);
       formDataToSend.append("medicalInfo[emergencyContacts][0][name]", formData.emergencyContact);
       
+      if (formData.parentId) {
+        formDataToSend.append("parentIds[]", formData.parentId);
+      }
+      
+      if (childImageFile) {
+        formDataToSend.append("childImage", childImageFile);
+      }
+
       files.forEach(file => {
         formDataToSend.append("caregiverImages", file);
       });
@@ -86,8 +114,9 @@ export default function RegisterChild() {
       setSuccess(true);
       // Reset form
       setFormData({
-        name: "", dob: "", classCategoryId: categories[0]?._id || "", allergies: "", emergencyContact: ""
+        name: "", dob: "", classCategoryId: categories[0]?._id || "", allergies: "", emergencyContact: "", parentId: ""
       });
+      setChildImageFile(null);
       setFiles([]);
 
     } catch (err: any) {
@@ -144,6 +173,18 @@ export default function RegisterChild() {
                 />
               </div>
             </div>
+            {currentUserRole !== "PARENT" && (
+              <div className="input-group" style={{ marginTop: '1rem' }}>
+                <label>Link Parent / Guardian</label>
+                <select name="parentId" value={formData.parentId} onChange={handleChange} required>
+                  <option value="" disabled>Select a Parent...</option>
+                  {parents.map(p => (
+                    <option key={p._id} value={p._id}>{p.name} ({p.email})</option>
+                  ))}
+                </select>
+                <small className="text-secondary">Since you are registering this child, you must link them to a parent account.</small>
+              </div>
+            )}
           </div>
 
           <div className="form-section">
@@ -160,17 +201,32 @@ export default function RegisterChild() {
 
           <div className="form-section">
             <h3>Photos (For Handoff Verification)</h3>
-            <div className="file-upload-zone">
-              <span className="upload-icon"></span>
-              <p>Upload clear photos of the Child, Parent, and Caregiver/Nanny.</p>
-              <input 
-                type="file" 
-                multiple 
-                accept="image/*" 
-                onChange={handleFileChange} 
-                className="file-input"
-              />
-              <p className="text-secondary">{files.length} file(s) selected</p>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="file-upload-zone" style={{ padding: '1rem', minHeight: 'auto' }}>
+                <span className="upload-icon"></span>
+                <p>Upload Child's Photo</p>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={(e) => setChildImageFile(e.target.files?.[0] || null)} 
+                  className="file-input"
+                />
+                <p className="text-secondary">{childImageFile ? "1 file selected" : "No file chosen"}</p>
+              </div>
+
+              <div className="file-upload-zone" style={{ padding: '1rem', minHeight: 'auto' }}>
+                <span className="upload-icon"></span>
+                <p>Upload Parent / Caregiver Photos</p>
+                <input 
+                  type="file" 
+                  multiple 
+                  accept="image/*" 
+                  onChange={handleFileChange} 
+                  className="file-input"
+                />
+                <p className="text-secondary">{files.length} file(s) selected</p>
+              </div>
             </div>
           </div>
 

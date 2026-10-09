@@ -18,7 +18,8 @@ export default function AdminDashboard() {
     }
 
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/stats`, {
-      headers: { "Authorization": `Bearer ${token}` }
+      headers: { "Authorization": `Bearer ${token}` },
+      cache: "no-store"
     })
       .then(res => {
         if (!res.ok) throw new Error("Failed to load stats. Ensure you have Admin privileges.");

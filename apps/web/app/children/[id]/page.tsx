@@ -53,10 +53,21 @@ export default function ChildProfile() {
           
           {/* Child Details */}
           <div className="glass-panel" style={{ padding: '2rem' }}>
-            <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: 'var(--text-main)' }}>{child.name}</h1>
-            <span className="badge" style={{ background: 'var(--primary)', padding: '0.3rem 0.6rem', borderRadius: '4px', display: 'inline-block', marginBottom: '1rem' }}>
-              {child.classCategoryId?.name || 'Unassigned'}
-            </span>
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+              {child.profileImage ? (
+                <img src={child.profileImage.startsWith('http') ? child.profileImage : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${child.profileImage}`} alt={child.name} style={{ width: '100px', height: '100px', borderRadius: '12px', objectFit: 'cover' }} />
+              ) : (
+                <div style={{ width: '100px', height: '100px', borderRadius: '12px', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '2.5rem' }}>
+                  {child.name.charAt(0)}
+                </div>
+              )}
+              <div>
+                <h1 style={{ fontSize: '2rem', margin: '0 0 0.5rem 0', color: 'var(--text-main)' }}>{child.name}</h1>
+                <span className="badge" style={{ background: 'var(--primary)', padding: '0.3rem 0.6rem', borderRadius: '4px', display: 'inline-block' }}>
+                  {child.classCategoryId?.name || 'Unassigned'}
+                </span>
+              </div>
+            </div>
             
             <div style={{ marginTop: '1.5rem' }}>
               <p style={{ margin: '0.5rem 0', color: 'var(--text-secondary)' }}>DOB: {new Date(child.dob).toLocaleDateString()}</p>
@@ -97,6 +108,22 @@ export default function ChildProfile() {
                     )}
                   </div>
                 ))}
+              </div>
+            )}
+
+            {child.caregiverImages && child.caregiverImages.length > 0 && (
+              <div style={{ marginTop: '2rem' }}>
+                <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: 'var(--text-main)' }}>Authorized Pickup (Visuals)</h3>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                  {child.caregiverImages.map((img: string, idx: number) => (
+                    <img 
+                      key={idx} 
+                      src={img.startsWith('http') ? img : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${img}`} 
+                      alt="Authorized Caregiver" 
+                      style={{ width: '100px', height: '100px', borderRadius: '8px', objectFit: 'cover', border: '2px solid var(--border-light)' }} 
+                    />
+                  ))}
+                </div>
               </div>
             )}
           </div>

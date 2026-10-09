@@ -50,6 +50,7 @@ export class HandoffService {
       time: new Date(),
       verifiedByCode: code,
       loggedBy: loggedById,
+      branchId: child.branchId,
     });
 
     // Notify all parents of the child

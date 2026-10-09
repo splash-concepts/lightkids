@@ -86,15 +86,43 @@ export default function HandoffPage() {
         ) : (
           <div className="siblings-list">
             {siblings.map((child: any) => (
-              <div key={child._id} className="sibling-item" style={{ padding: '1rem', background: 'rgba(255,255,255,0.5)', borderRadius: '8px', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <h3 style={{ fontSize: '1.1rem', margin: 0 }}>{child.name}</h3>
-                  <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{child.classCategoryId?.name || 'Class Assigned'}</p>
+              <div key={child._id} className="sibling-item" style={{ padding: '1rem', background: 'rgba(255,255,255,0.5)', borderRadius: '8px', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    {child.profileImage ? (
+                      <img src={child.profileImage.startsWith('http') ? child.profileImage : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${child.profileImage}`} alt={child.name} style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '1.5rem' }}>
+                        {child.name.charAt(0)}
+                      </div>
+                    )}
+                    <div>
+                      <h3 style={{ fontSize: '1.2rem', margin: 0, color: 'var(--text-main)' }}>{child.name}</h3>
+                      <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{child.classCategoryId?.name || 'Class Assigned'}</p>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    <button onClick={() => handleAction(child._id, "DROP_OFF")} className="btn btn-primary btn-sm" disabled={loading}>Drop Off</button>
+                    <button onClick={() => handleAction(child._id, "PICK_UP")} className="btn btn-outline btn-sm" disabled={loading}>Pick Up</button>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button onClick={() => handleAction(child._id, "DROP_OFF")} className="btn btn-primary btn-sm" disabled={loading}>Drop Off</button>
-                  <button onClick={() => handleAction(child._id, "PICK_UP")} className="btn btn-outline btn-sm" disabled={loading}>Pick Up</button>
-                </div>
+
+                {child.caregiverImages && child.caregiverImages.length > 0 && (
+                  <div style={{ borderTop: '1px solid rgba(0,0,0,0.1)', paddingTop: '1rem' }}>
+                    <h4 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Authorized Caregivers (Visual Verify):</h4>
+                    <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto' }}>
+                      {child.caregiverImages.map((img: string, idx: number) => (
+                        <img 
+                          key={idx} 
+                          src={img.startsWith('http') ? img : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${img}`} 
+                          alt="Caregiver" 
+                          style={{ width: '80px', height: '80px', borderRadius: '8px', objectFit: 'cover', border: '2px solid var(--border-light)' }} 
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
             <button onClick={() => setStep(1)} className="btn btn-outline w-full" style={{ marginTop: '1rem' }}>Enter Another Code</button>
