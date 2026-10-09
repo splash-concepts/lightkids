@@ -113,6 +113,9 @@ export default function Home() {
               {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
                 <Link href="/dashboard/admin" className="btn btn-primary hover-lift text-center" style={{ background: 'var(--accent)', borderColor: 'var(--accent)' }}>Admin Dashboard</Link>
               )}
+              {(user?.role === 'MENTOR') && (
+                <Link href="/dashboard/mentor" className="btn btn-primary hover-lift text-center" style={{ background: 'var(--accent)', borderColor: 'var(--accent)' }}>Mentor Dashboard</Link>
+              )}
               {(user?.role === 'ADMIN' || user?.role === 'PARENT' || user?.role === 'MENTOR') && (
                 <Link href="/register" className="btn btn-primary hover-lift text-center">Register New Child</Link>
               )}

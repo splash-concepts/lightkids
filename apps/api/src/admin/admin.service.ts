@@ -160,14 +160,16 @@ export class AdminService {
   }
 
   async getClassCategories(branchId?: string) {
-    const filter = branchId ? { branchId } : {};
+    const filter = branchId ? { $or: [{ branchId }, { branchId: { $exists: false } }, { branchId: null }] } : {};
     return this.classCategoryModel.find(filter).populate('mentorIds', 'name email').sort({ name: 1 });
   }
 
-  async updateClassCategory(id: string, data: { name?: string; description?: string; mentorIds?: string[]; ageMin?: number; ageMax?: number }, branchId: string) {
-    // We enforce branchId to ensure an Admin can only edit classes in their branch
+  async updateClassCategory(id: string, data: { name?: string; description?: string; mentorIds?: string[]; ageMin?: number; ageMax?: number }, branchId?: string) {
+    const filter: any = { _id: id };
+    if (branchId) filter.branchId = branchId;
+
     return this.classCategoryModel.findOneAndUpdate(
-      { _id: id, branchId },
+      filter,
       { $set: data },
       { new: true }
     );

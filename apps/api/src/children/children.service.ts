@@ -16,7 +16,7 @@ export class ChildrenService {
   ) {}
 
   async getCategories(branchId: string, mentorId?: string) {
-    const filter: any = { branchId };
+    const filter: any = { $or: [{ branchId }, { branchId: { $exists: false } }, { branchId: null }] };
     if (mentorId) {
       filter.mentorIds = mentorId;
     }

@@ -99,7 +99,8 @@ export class AdminController {
   @Patch('class-categories/:id')
   async updateClassCategory(@Param('id') id: string, @Body() body: { name?: string; description?: string; mentorIds?: string[]; ageMin?: number; ageMax?: number }, @Req() req: any) {
     this.checkAdmin(req);
-    return this.adminService.updateClassCategory(id, body, req.user.branchId);
+    const targetBranchId = req.user.role === 'SUPER_ADMIN' ? undefined : req.user.branchId;
+    return this.adminService.updateClassCategory(id, body, targetBranchId);
   }
 
   @Delete('class-categories/:id')

@@ -20,8 +20,8 @@ export class ClassCategory {
   @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }] })
   mentorIds: Types.ObjectId[];
 
-  @Prop({ type: Types.ObjectId, ref: 'Branch', required: true })
-  branchId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Branch' })
+  branchId?: Types.ObjectId;
 }
 
 export const ClassCategorySchema = SchemaFactory.createForClass(ClassCategory);
