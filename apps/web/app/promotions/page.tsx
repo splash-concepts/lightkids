@@ -33,7 +33,9 @@ export default function PromotionsPage() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/categories`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/categories`, {
+        headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
+      });
       const data = await response.json();
       setCategories(data);
     } catch (err) {

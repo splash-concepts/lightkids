@@ -260,33 +260,52 @@ export default function UserDirectory() {
 
                     {currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN' ? (
                       <>
-                        <select 
-                          value={user.role} 
-                          onChange={(e) => handleRoleChange(user._id, e.target.value)}
-                          style={{ padding: '0.4rem', borderRadius: '4px', background: 'var(--bg-main)', color: 'white', border: '1px solid var(--border-color)' }}
-                        >
-                          <option value="PARENT">PARENT</option>
-                          <option value="MENTOR">MENTOR</option>
-                          <option value="MINISTER">MINISTER</option>
-                          <option value="ADMIN">ADMIN</option>
-                        </select>
+                        {user.role === 'PARENT' ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <input 
+                              type="checkbox" 
+                              id={`mentor-${user._id}`} 
+                              onChange={(e) => {
+                                if(e.target.checked && confirm('Are you sure you want to promote this parent to a Mentor? They will be managed from the Mentors section.')) {
+                                  handleRoleChange(user._id, 'MENTOR');
+                                } else {
+                                  e.target.checked = false;
+                                }
+                              }} 
+                            />
+                            <label htmlFor={`mentor-${user._id}`} style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>Now a Children Mentor</label>
+                          </div>
+                        ) : (
+                          <>
+                            <select 
+                              value={user.role} 
+                              onChange={(e) => handleRoleChange(user._id, e.target.value)}
+                              style={{ padding: '0.4rem', borderRadius: '4px', background: 'var(--bg-main)', color: 'white', border: '1px solid var(--border-color)' }}
+                            >
+                              <option value="PARENT">PARENT</option>
+                              <option value="MENTOR">MENTOR</option>
+                              <option value="MINISTER">MINISTER</option>
+                              <option value="ADMIN">ADMIN</option>
+                            </select>
 
-                        <input 
-                          type="text" 
-                          placeholder="Office (e.g. HOD)" 
-                          defaultValue={user.office || ""}
-                          onBlur={(e) => {
-                            const val = e.target.value;
-                            if (val !== user.office) {
-                              fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/users/${user._id}/role`, {
-                                method: 'PATCH',
-                                headers: { "Authorization": `Bearer ${localStorage.getItem('token')}`, "Content-Type": "application/json" },
-                                body: JSON.stringify({ office: val })
-                              }).then(() => fetchUsers(filterRole)).catch(console.error);
-                            }
-                          }}
-                          style={{ padding: '0.4rem', borderRadius: '4px', background: 'var(--bg-main)', color: 'white', border: '1px solid var(--border-color)', width: '120px' }}
-                        />
+                            <input 
+                              type="text" 
+                              placeholder="Office (e.g. HOD)" 
+                              defaultValue={user.office || ""}
+                              onBlur={(e) => {
+                                const val = e.target.value;
+                                if (val !== user.office) {
+                                  fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/users/${user._id}/role`, {
+                                    method: 'PATCH',
+                                    headers: { "Authorization": `Bearer ${localStorage.getItem('token')}`, "Content-Type": "application/json" },
+                                    body: JSON.stringify({ office: val })
+                                  }).then(() => fetchUsers(filterRole)).catch(console.error);
+                                }
+                              }}
+                              style={{ padding: '0.4rem', borderRadius: '4px', background: 'var(--bg-main)', color: 'white', border: '1px solid var(--border-color)', width: '120px' }}
+                            />
+                          </>
+                        )}
                         
                         <select 
                           value={user.branchId || ""} 
