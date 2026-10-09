@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Child, ChildDocument } from '../schemas/child.schema.js';
@@ -85,7 +85,7 @@ export class ChildrenService {
     }
 
     const attendance = await this.attendanceModel.find({ childId }).sort({ date: -1 });
-    let materials = [];
+    let materials: any[] = [];
     if (child.classCategoryId) {
       materials = await this.materialModel.find({ classCategoryId: child.classCategoryId._id }).sort({ createdAt: -1 });
     }
