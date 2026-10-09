@@ -33,10 +33,15 @@ export class AdminController {
   }
 
   @Get('users')
-  async getUsers(@Query('role') role: string, @Req() req: any) {
+  async getUsers(
+    @Query('role') role: string, 
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '50',
+    @Req() req: any
+  ) {
     this.checkStaff(req);
     const branchId = req.user.role === 'SUPER_ADMIN' ? undefined : req.user.branchId;
-    return this.adminService.getUsers(role, branchId);
+    return this.adminService.getUsers(role, branchId, parseInt(page, 10), parseInt(limit, 10));
   }
 
   @Get('users/:id')
@@ -46,10 +51,14 @@ export class AdminController {
   }
 
   @Get('children')
-  async getChildren(@Req() req: any) {
+  async getChildren(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '50',
+    @Req() req: any
+  ) {
     this.checkStaff(req);
     const branchId = req.user.role === 'SUPER_ADMIN' ? undefined : req.user.branchId;
-    return this.adminService.getChildren(branchId);
+    return this.adminService.getChildren(branchId, parseInt(page, 10), parseInt(limit, 10));
   }
 
   @Get('children/:id')
@@ -59,10 +68,14 @@ export class AdminController {
   }
 
   @Get('attendance')
-  async getAttendanceHistory(@Req() req: any) {
+  async getAttendanceHistory(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '100',
+    @Req() req: any
+  ) {
     this.checkAdmin(req);
     const branchId = req.user.role === 'SUPER_ADMIN' ? undefined : req.user.branchId;
-    return this.adminService.getAttendanceHistory(branchId);
+    return this.adminService.getAttendanceHistory(branchId, parseInt(page, 10), parseInt(limit, 10));
   }
 
   // Multi-Tenancy / Branch Management

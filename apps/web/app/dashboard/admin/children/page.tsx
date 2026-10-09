@@ -8,17 +8,26 @@ import "../../mentor/mentor.css";
 export default function ChildrenDirectory() {
   const [children, setChildren] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/children`, {
+    setLoading(true);
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/children?page=${page}&limit=50`, {
       headers: { "Authorization": `Bearer ${token}` },
       cache: "no-store"
     })
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) setChildren(data);
-        else setChildren([]);
+        if (Array.isArray(data)) {
+          setChildren(data);
+        } else if (data && Array.isArray(data.data)) {
+          setChildren(data.data);
+          setTotalPages(data.totalPages || 1);
+        } else {
+          setChildren([]);
+        }
         setLoading(false);
       })
       .catch(err => {
@@ -26,7 +35,7 @@ export default function ChildrenDirectory() {
         setChildren([]);
         setLoading(false);
       });
-  }, []);
+  }, [page]);
 
   return (
     <div className="mentor-container" style={{ minHeight: '100vh' }}>
@@ -44,6 +53,7 @@ export default function ChildrenDirectory() {
           <p className="text-secondary" style={{ marginBottom: '2rem' }}>A complete list of children and their basic info.</p>
 
           {loading ? <p>Loading children...</p> : (
+          <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
               {children.length === 0 ? <p>No children found.</p> : children.map(child => (
                 <div key={child._id} className="action-card glass-panel hover-lift" style={{ cursor: 'default' }}>
@@ -63,6 +73,15 @@ export default function ChildrenDirectory() {
                 </div>
               ))}
             </div>
+            
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem' }}>
+                <button className="btn btn-outline" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Previous</button>
+                <span style={{ display: 'flex', alignItems: 'center', color: 'var(--text-secondary)' }}>Page {page} of {totalPages}</span>
+                <button className="btn btn-outline" disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Next</button>
+              </div>
+            )}
+          </>
           )}
         </div>
       </div>

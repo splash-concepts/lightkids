@@ -12,6 +12,8 @@ export default function MaterialsPage() {
   const [message, setMessage] = useState("");
   const [role, setRole] = useState("PARENT");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   // Form State
   const [file, setFile] = useState<File | null>(null);
@@ -56,12 +58,18 @@ export default function MaterialsPage() {
       });
   }, []);
 
-  const fetchMaterials = async (classId: string) => {
+  useEffect(() => {
+    if (formData.classCategoryId) {
+      fetchMaterials(formData.classCategoryId, page);
+    }
+  }, [page]);
+
+  const fetchMaterials = async (classId: string, pageNum: number = 1) => {
     setLoading(true);
     try {
       const url = classId === 'all' 
-        ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/materials/all`
-        : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/materials/class/${classId}`;
+        ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/materials/all?page=${pageNum}&limit=20`
+        : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/materials/class/${classId}?page=${pageNum}&limit=20`;
       
       const response = await fetch(url, {
         headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
@@ -69,6 +77,9 @@ export default function MaterialsPage() {
       const data = await response.json();
       if (Array.isArray(data)) {
         setMaterials(data);
+      } else if (data && Array.isArray(data.data)) {
+        setMaterials(data.data);
+        setTotalPages(data.totalPages || 1);
       } else {
         setMaterials([]);
       }
@@ -82,7 +93,8 @@ export default function MaterialsPage() {
   const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const classId = e.target.value;
     setFormData({ ...formData, classCategoryId: classId });
-    fetchMaterials(classId);
+    setPage(1);
+    fetchMaterials(classId, 1);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -218,6 +230,14 @@ export default function MaterialsPage() {
                 ))
               )}
             </div>
+            
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem' }}>
+                <button className="btn btn-outline" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Previous</button>
+                <span style={{ display: 'flex', alignItems: 'center', color: 'var(--text-secondary)' }}>Page {page} of {totalPages}</span>
+                <button className="btn btn-outline" disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Next</button>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -37,3 +37,18 @@ export class Attendance {
 }
 
 export const AttendanceSchema = SchemaFactory.createForClass(Attendance);
+
+// Ensure one attendance record per day for a child
+AttendanceSchema.index(
+  { childId: 1, date: 1 }, 
+  { unique: true, partialFilterExpression: { childId: { $exists: true } } }
+);
+
+// Ensure one attendance record per day for a staff member (userId)
+AttendanceSchema.index(
+  { userId: 1, date: 1 }, 
+  { unique: true, partialFilterExpression: { userId: { $exists: true } } }
+);
+
+// Add index for fast querying by branch and date for dashboard
+AttendanceSchema.index({ branchId: 1, date: -1 });

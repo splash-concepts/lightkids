@@ -47,6 +47,19 @@ export class HandoffService {
       throw new BadRequestException('Invalid unique code for handoff');
     }
 
+    // Prevent duplicate logs today
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const existingLog = await this.handoffModel.findOne({
+      childId,
+      type,
+      time: { $gte: startOfDay }
+    });
+
+    if (existingLog) {
+      throw new BadRequestException(`Child has already been ${type === HandoffType.DROP_OFF ? 'dropped off' : 'picked up'} today`);
+    }
+
     const log = await this.handoffModel.create({
       childId,
       type,

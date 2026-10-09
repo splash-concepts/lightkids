@@ -55,7 +55,7 @@ export default function MentorDashboard() {
     })
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) setChildren(data);
+        if (Array.isArray(data)) setChildren(data); else if (data && Array.isArray(data.data)) setChildren(data.data);
       })
       .catch(console.error);
       

@@ -30,12 +30,23 @@ export class MaterialController {
   }
 
   @Get('all')
-  async getAllMaterials(@Query('type') type: MaterialType, @Req() req: any) {
-    return this.materialService.getAllMaterials(req.user, type);
+  async getAllMaterials(
+    @Query('type') type: MaterialType, 
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '20',
+    @Req() req: any
+  ) {
+    return this.materialService.getAllMaterials(req.user, type, parseInt(page, 10), parseInt(limit, 10));
   }
 
   @Get('class/:classId')
-  async getByClass(@Param('classId') classId: string, @Query('type') type: MaterialType, @Req() req: any) {
-    return this.materialService.getMaterialsByClass(classId, req.user.branchId, type);
+  async getByClass(
+    @Param('classId') classId: string, 
+    @Query('type') type: MaterialType, 
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '20',
+    @Req() req: any
+  ) {
+    return this.materialService.getMaterialsByClass(classId, req.user.branchId, type, parseInt(page, 10), parseInt(limit, 10));
   }
 }

@@ -8,7 +8,9 @@ import "../../mentor/mentor.css";
 export default function UserDirectory() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterRole, setFilterRole] = useState("PARENT");
+  const [filterRole, setFilterRole] = useState("MENTOR");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [branches, setBranches] = useState<any[]>([]);
   const [error, setError] = useState("");
@@ -45,19 +47,24 @@ export default function UserDirectory() {
   }, []);
 
   useEffect(() => {
-    fetchUsers(filterRole);
-  }, [filterRole]);
+    fetchUsers(filterRole, page);
+  }, [filterRole, page]);
 
-  const fetchUsers = (role: string) => {
+  const fetchUsers = (role: string, pageNum: number = 1) => {
     setLoading(true);
     const token = localStorage.getItem("token");
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/users?role=${role}`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/users?role=${role}&page=${pageNum}&limit=50`, {
       headers: { "Authorization": `Bearer ${token}` },
       cache: "no-store"
     })
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) setUsers(data);
+        if (Array.isArray(data)) {
+          setUsers(data);
+        } else if (data && Array.isArray(data.data)) {
+          setUsers(data.data);
+          setTotalPages(data.totalPages || 1);
+        }
         else setUsers([]);
         setLoading(false);
       })
@@ -89,7 +96,7 @@ export default function UserDirectory() {
       setSuccess("Staff member created successfully!");
       setNewStaff({ name: "", email: "", password: "", role: "MENTOR" });
       setShowAddForm(false);
-      fetchUsers(filterRole);
+      fetchUsers(filterRole, page);
       setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
       setError(err.message);
@@ -193,10 +200,10 @@ export default function UserDirectory() {
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <button className={`btn ${filterRole === 'PARENT' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setFilterRole('PARENT')}>Parents</button>
-              <button className={`btn ${filterRole === 'MENTOR' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setFilterRole('MENTOR')}>Teachers / Mentors</button>
-              <button className={`btn ${filterRole === 'MINISTER' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setFilterRole('MINISTER')}>Ministers</button>
-              <button className={`btn ${filterRole === 'ADMIN' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setFilterRole('ADMIN')}>Administrators</button>
+              <button className={`btn ${filterRole === 'PARENT' ? 'btn-primary' : 'btn-outline'}`} onClick={() => { setFilterRole('PARENT'); setPage(1); }}>Parents</button>
+              <button className={`btn ${filterRole === 'MENTOR' ? 'btn-primary' : 'btn-outline'}`} onClick={() => { setFilterRole('MENTOR'); setPage(1); }}>Teachers / Mentors</button>
+              <button className={`btn ${filterRole === 'MINISTER' ? 'btn-primary' : 'btn-outline'}`} onClick={() => { setFilterRole('MINISTER'); setPage(1); }}>Ministers</button>
+              <button className={`btn ${filterRole === 'ADMIN' ? 'btn-primary' : 'btn-outline'}`} onClick={() => { setFilterRole('ADMIN'); setPage(1); }}>Administrators</button>
             </div>
             
             <button className="btn btn-secondary" onClick={() => setShowAddForm(!showAddForm)}>
@@ -350,6 +357,14 @@ export default function UserDirectory() {
                   )}
                 </div>
               ))}
+              
+              {totalPages > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem' }}>
+                  <button className="btn btn-outline" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Previous</button>
+                  <span style={{ display: 'flex', alignItems: 'center', color: 'var(--text-secondary)' }}>Page {page} of {totalPages}</span>
+                  <button className="btn btn-outline" disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Next</button>
+                </div>
+              )}
           </div>
         )}
         </div>

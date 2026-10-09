@@ -17,14 +17,19 @@ export class MaterialService {
     return this.materialModel.create(data);
   }
 
-  async getMaterialsByClass(classCategoryId: string, branchId: string, type?: MaterialType) {
+  async getMaterialsByClass(classCategoryId: string, branchId: string, type?: MaterialType, page: number = 1, limit: number = 20) {
     const filter: any = { classCategoryId, branchId };
     if (type) filter.type = type;
     
-    return this.materialModel.find(filter).sort({ createdAt: -1 }).populate('authorId', 'name').populate('classCategoryId', 'name');
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.materialModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).populate('authorId', 'name').populate('classCategoryId', 'name'),
+      this.materialModel.countDocuments(filter)
+    ]);
+    return { data, total, page, totalPages: Math.ceil(total / limit) };
   }
 
-  async getAllMaterials(user: any, type?: MaterialType) {
+  async getAllMaterials(user: any, type?: MaterialType, page: number = 1, limit: number = 20) {
     const filter: any = {};
     if (type) filter.type = type;
 
@@ -42,6 +47,11 @@ export class MaterialService {
       filter.classCategoryId = { $in: children.map(c => c.classCategoryId).filter(id => !!id) };
     }
 
-    return this.materialModel.find(filter).sort({ createdAt: -1 }).populate('authorId', 'name').populate('classCategoryId', 'name');
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.materialModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).populate('authorId', 'name').populate('classCategoryId', 'name'),
+      this.materialModel.countDocuments(filter)
+    ]);
+    return { data, total, page, totalPages: Math.ceil(total / limit) };
   }
 }

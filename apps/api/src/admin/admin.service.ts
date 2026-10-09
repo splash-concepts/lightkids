@@ -121,11 +121,18 @@ export class AdminService {
     };
   }
 
-  async getUsers(role?: string, branchId?: string) {
+  async getUsers(role?: string, branchId?: string, page: number = 1, limit: number = 50) {
     const filter: any = {};
     if (role) filter.role = role;
     if (branchId) filter.branchId = branchId;
-    return this.userModel.find(filter).select('-password').sort({ createdAt: -1 });
+    
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.userModel.find(filter).select('-password').sort({ createdAt: -1 }).skip(skip).limit(limit),
+      this.userModel.countDocuments(filter)
+    ]);
+    
+    return { data, total, page, totalPages: Math.ceil(total / limit) };
   }
 
   async getUserProfile(id: string) {
@@ -144,9 +151,16 @@ export class AdminService {
     return { user, children, classes };
   }
 
-  async getChildren(branchId?: string) {
+  async getChildren(branchId?: string, page: number = 1, limit: number = 50) {
     const filter = branchId ? { branchId } : {};
-    return this.childModel.find(filter).populate('classCategoryId').populate('parentIds', 'name email phoneNumber whatsappNumber').sort({ createdAt: -1 });
+    
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.childModel.find(filter).populate('classCategoryId').populate('parentIds', 'name email phoneNumber whatsappNumber').sort({ createdAt: -1 }).skip(skip).limit(limit),
+      this.childModel.countDocuments(filter)
+    ]);
+    
+    return { data, total, page, totalPages: Math.ceil(total / limit) };
   }
 
   async getChild(id: string) {
@@ -155,9 +169,16 @@ export class AdminService {
     return { child, attendance };
   }
 
-  async getAttendanceHistory(branchId?: string) {
+  async getAttendanceHistory(branchId?: string, page: number = 1, limit: number = 100) {
     const filter = branchId ? { branchId } : {};
-    return this.attendanceModel.find(filter).populate('childId').populate('markedBy').sort({ date: -1 }).limit(100);
+    
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.attendanceModel.find(filter).populate('childId').populate('markedBy').sort({ date: -1 }).skip(skip).limit(limit),
+      this.attendanceModel.countDocuments(filter)
+    ]);
+    
+    return { data, total, page, totalPages: Math.ceil(total / limit) };
   }
 
   // Multi-Tenancy / Branch Management

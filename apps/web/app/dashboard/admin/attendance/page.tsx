@@ -8,16 +8,25 @@ import "../../mentor/mentor.css";
 export default function HistoricAttendance() {
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/attendance`, {
+    setLoading(true);
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/attendance?page=${page}&limit=100`, {
       headers: { "Authorization": `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) setRecords(data);
-        else setRecords([]);
+        if (Array.isArray(data)) {
+          setRecords(data);
+        } else if (data && Array.isArray(data.data)) {
+          setRecords(data.data);
+          setTotalPages(data.totalPages || 1);
+        } else {
+          setRecords([]);
+        }
         setLoading(false);
       })
       .catch(err => {
@@ -25,7 +34,7 @@ export default function HistoricAttendance() {
         setRecords([]);
         setLoading(false);
       });
-  }, []);
+  }, [page]);
 
   return (
     <div className="mentor-container" style={{ minHeight: '100vh' }}>
@@ -43,6 +52,7 @@ export default function HistoricAttendance() {
           <p className="text-secondary" style={{ marginBottom: '2rem' }}>Review all historic daily attendance markings across all classes.</p>
 
           {loading ? <p>Loading records...</p> : (
+          <>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
@@ -75,6 +85,15 @@ export default function HistoricAttendance() {
                 ))}
               </tbody>
             </table>
+            
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem' }}>
+                <button className="btn btn-outline" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Previous</button>
+                <span style={{ display: 'flex', alignItems: 'center', color: 'var(--text-secondary)' }}>Page {page} of {totalPages}</span>
+                <button className="btn btn-outline" disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Next</button>
+              </div>
+            )}
+          </>
           )}
         </div>
       </div>
