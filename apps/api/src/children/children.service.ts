@@ -96,7 +96,12 @@ export class ChildrenService {
   }
 
   async getChildProfile(childId: string, userId: string, role: string) {
-    const child = await this.childModel.findById(childId).populate('classCategoryId').populate('parentIds', 'name email');
+    const child = await this.childModel.findById(childId)
+      .populate({
+        path: 'classCategoryId',
+        populate: { path: 'mentorIds', select: 'name email profileImage' }
+      })
+      .populate('parentIds', 'name email');
     if (!child) throw new NotFoundException('Child not found');
     
     if (role === 'PARENT' && !child.parentIds.some((p: any) => p._id.toString() === userId)) {
@@ -108,7 +113,9 @@ export class ChildrenService {
     if (child.classCategoryId) {
       materials = await this.materialModel.find({ classCategoryId: child.classCategoryId._id }).sort({ createdAt: -1 });
     }
-    const classes = await this.classCategoryModel.find({ branchId: child.branchId });
+    const classes = await this.classCategoryModel.find({ 
+      $or: [{ branchId: child.branchId }, { branchId: { $exists: false } }, { branchId: null }] 
+    });
 
     return { child, attendance, materials, classes };
   }

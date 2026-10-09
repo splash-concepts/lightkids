@@ -144,6 +144,14 @@ export default function ChildProfile() {
                       <span className="badge" style={{ background: 'var(--primary)', padding: '0.3rem 0.6rem', borderRadius: '4px', display: 'inline-block' }}>
                         {child.classCategoryId?.name || 'Unassigned'}
                       </span>
+                      {child.classCategoryId?.mentorIds?.length > 0 && (
+                        <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                          <strong>Mentors:</strong>{' '}
+                          {child.classCategoryId.mentorIds.map((m: any, i: number) => (
+                            <span key={m._id || i}>{m.name}{i < child.classCategoryId.mentorIds.length - 1 ? ', ' : ''}</span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                   

@@ -1,4 +1,7 @@
-import { Controller, Post, Body, Req, UseGuards, Get } from '@nestjs/common';
+import { Controller, Post, Body, Req, UseGuards, Get, Patch, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { getCloudinaryStorage } from '../utils/cloudinary.util.js';
 import { AuthService } from './auth.service.js';
 import * as qrcode from 'qrcode';
 
@@ -32,5 +35,17 @@ export class AuthController {
   @Post('2fa/turn-on')
   async turnOn2fa(@Body() body: { userId: string, token: string }) {
     return this.authService.turnOnTwoFactor(body.userId, body.token);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Patch('profile/image')
+  @UseInterceptors(FileInterceptor('image', {
+    storage: getCloudinaryStorage('caregivers')
+  }))
+  async uploadProfileImage(@Req() req: any, @UploadedFile() file: Express.Multer.File) {
+    const imageUrl = file?.path?.startsWith('http') ? file.path : (file?.filename ? `/uploads/caregivers/${file.filename}` : null);
+    if (!imageUrl) return { success: false };
+    await this.authService.updateProfileImage(req.user.userId, imageUrl);
+    return { success: true, imageUrl };
   }
 }

@@ -91,4 +91,8 @@ export class AuthService {
     await user.save();
     return { message: '2FA enabled successfully' };
   }
+
+  async updateProfileImage(userId: string, profileImage: string) {
+    await this.userModel.findByIdAndUpdate(userId, { profileImage });
+  }
 }

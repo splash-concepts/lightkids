@@ -15,6 +15,35 @@ export default function UserProfile() {
   const [isAssigning, setIsAssigning] = useState(false);
   const [mentorClasses, setMentorClasses] = useState<string[]>([]);
   const [updating, setUpdating] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/auth/profile/image`, {
+        method: 'PATCH',
+        headers: { "Authorization": `Bearer ${token}` },
+        body: formData
+      });
+      if (res.ok) {
+        const result = await res.json();
+        if (result.success) {
+          setData({ ...data, user: { ...data.user, profileImage: result.imageUrl } });
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -97,9 +126,22 @@ export default function UserProfile() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem', maxWidth: '800px', margin: '0 auto' }}>
           
           <div className="glass-panel" style={{ padding: '2rem' }}>
-            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '2rem' }}>
-                {user.name.charAt(0)}
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', marginBottom: '1.5rem', position: 'relative' }}>
+              <div style={{ position: 'relative' }}>
+                {user.profileImage ? (
+                  <img src={user.profileImage.startsWith('http') ? user.profileImage : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${user.profileImage}`} alt={user.name} style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '2rem' }}>
+                    {user.name.charAt(0)}
+                  </div>
+                )}
+                
+                {currentUser?.userId === id && (
+                  <label style={{ position: 'absolute', bottom: '-5px', right: '-5px', background: 'var(--secondary)', color: 'white', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '0.8rem' }}>
+                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} disabled={uploadingImage} />
+                    ✏️
+                  </label>
+                )}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <h1 style={{ fontSize: '2rem', margin: '0 0 0.5rem 0', color: 'var(--text-main)' }}>{user.name}</h1>

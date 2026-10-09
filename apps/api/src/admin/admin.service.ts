@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { User, UserDocument, UserRole } from '../schemas/user.schema.js';
 import { Child, ChildDocument } from '../schemas/child.schema.js';
 import { Attendance, AttendanceDocument, AttendanceStatus } from '../schemas/attendance.schema.js';
@@ -207,7 +207,7 @@ export class AdminService {
   }
 
   async getClassCategories(branchId?: string) {
-    const filter = branchId ? { $or: [{ branchId }, { branchId: { $exists: false } }, { branchId: null }] } : {};
+    const filter = branchId ? { $or: [{ branchId: new Types.ObjectId(branchId) }, { branchId: { $exists: false } }, { branchId: null }] } : {};
     return this.classCategoryModel.find(filter).populate('mentorIds', 'name email').sort({ name: 1 });
   }
 
