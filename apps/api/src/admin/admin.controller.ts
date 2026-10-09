@@ -80,7 +80,7 @@ export class AdminController {
   @Get('class-categories')
   async getClassCategories(@Query('branchId') branchId: string, @Req() req: any) {
     this.checkAdmin(req);
-    const targetBranchId = req.user.role === 'SUPER_ADMIN' ? branchId : req.user.branchId;
+    const targetBranchId = req.user.role === 'SUPER_ADMIN' ? (branchId || undefined) : req.user.branchId;
     return this.adminService.getClassCategories(targetBranchId);
   }
 

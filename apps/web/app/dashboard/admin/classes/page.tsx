@@ -9,6 +9,7 @@ export default function AdminClassesDashboard() {
   const [mentors, setMentors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   
   const [newClass, setNewClass] = useState({ name: "", description: "", ageMin: 1, ageMax: 3 });
   const [creating, setCreating] = useState(false);
@@ -51,7 +52,10 @@ export default function AdminClassesDashboard() {
 
   const handleCreateClass = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (creating) return;
     setCreating(true);
+    setError("");
+    setSuccess("");
     try {
       const token = localStorage.getItem('token');
       const payloadBase64 = token?.split('.')[1];
@@ -72,8 +76,11 @@ export default function AdminClassesDashboard() {
       
       await fetchClasses(token as string);
       setNewClass({ name: "", description: "", ageMin: 1, ageMax: 3 });
+      setSuccess("Class category created successfully!");
+      setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
-      alert(err.message);
+      setError(err.message);
+      setTimeout(() => setError(""), 5000);
     } finally {
       setCreating(false);
     }
@@ -100,7 +107,10 @@ export default function AdminClassesDashboard() {
 
   const handleUpdateClass = async (e: React.FormEvent, id: string) => {
     e.preventDefault();
+    if (updating) return;
     setUpdating(true);
+    setError("");
+    setSuccess("");
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/class-categories/${id}`, {
@@ -115,8 +125,11 @@ export default function AdminClassesDashboard() {
       
       await fetchClasses(token as string);
       setEditingId(null);
+      setSuccess("Class category updated successfully!");
+      setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
-      alert(err.message);
+      setError(err.message);
+      setTimeout(() => setError(""), 5000);
     } finally {
       setUpdating(false);
     }
@@ -133,12 +146,23 @@ export default function AdminClassesDashboard() {
       <div className="dashboard-content">
         <Link href="/dashboard/admin" className="btn btn-outline btn-sm" style={{ marginBottom: '2rem', display: 'inline-block' }}>← Back to Admin Dashboard</Link>
         
-        <header className="header glass-panel" style={{ marginBottom: '2rem', padding: '2rem' }}>
+        <header className="header glass-panel" style={{ marginBottom: '2rem', padding: '2rem', position: 'relative' }}>
           <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: 'var(--text-main)' }}>Class Categories</h1>
           <p style={{ color: 'var(--text-secondary)' }}>Manage the age groups and classes for your branch.</p>
         </header>
 
-        {error && <div style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{error}</div>}
+        {/* Animated Popups */}
+        {error && (
+          <div className="animate-fade-in" style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, background: 'var(--danger)', color: 'white', padding: '1rem 1.5rem', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+            <strong>Oops! Failed: </strong> {error}
+          </div>
+        )}
+        
+        {success && (
+          <div className="animate-fade-in" style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, background: 'var(--secondary)', color: 'white', padding: '1rem 1.5rem', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+            <strong>Success! </strong> {success}
+          </div>
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem' }}>
           

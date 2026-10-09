@@ -93,8 +93,9 @@ export class AdminService {
     return this.classCategoryModel.create(data);
   }
 
-  async getClassCategories(branchId: string) {
-    return this.classCategoryModel.find({ branchId }).populate('mentorIds', 'name email').sort({ name: 1 });
+  async getClassCategories(branchId?: string) {
+    const filter = branchId ? { branchId } : {};
+    return this.classCategoryModel.find(filter).populate('mentorIds', 'name email').sort({ name: 1 });
   }
 
   async updateClassCategory(id: string, data: { name?: string; description?: string; mentorIds?: string[]; ageMin?: number; ageMax?: number }, branchId: string) {
