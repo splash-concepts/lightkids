@@ -32,7 +32,7 @@ export default function AdminClassesDashboard() {
       });
       if (mentorsRes.ok) {
         const mentorsData = await mentorsRes.json();
-        setMentors(mentorsData);
+        setMentors(Array.isArray(mentorsData) ? mentorsData : (mentorsData.data || []));
       }
     } catch (err: any) {
       setError(err.message);

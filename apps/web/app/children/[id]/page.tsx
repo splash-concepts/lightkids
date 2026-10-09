@@ -15,6 +15,39 @@ export default function ChildProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<any>({});
   const [updating, setUpdating] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'childImage' | 'caregiverImages') => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingImage(true);
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      if (files[i]) formData.append(fieldName, files[i] as Blob);
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/${id}/images`, {
+        method: 'PATCH',
+        headers: { "Authorization": `Bearer ${token}` },
+        body: formData
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setData({ ...data, child: updated });
+      } else {
+        const err = await res.json();
+        alert(err.message || 'Failed to upload image');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error uploading image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -132,13 +165,20 @@ export default function ChildProfile() {
                   }} className="btn btn-outline btn-sm" style={{ position: 'absolute', top: '1rem', right: '1rem' }}>Edit Profile</button>
 
                   <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                    {child.profileImage ? (
-                      <img src={child.profileImage.startsWith('http') ? child.profileImage : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${child.profileImage}`} alt={child.name} style={{ width: '100px', height: '100px', borderRadius: '12px', objectFit: 'cover' }} />
-                    ) : (
-                      <div style={{ width: '100px', height: '100px', borderRadius: '12px', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '2.5rem' }}>
-                        {child.name.charAt(0)}
-                      </div>
-                    )}
+                    <div style={{ position: 'relative' }}>
+                      {child.profileImage ? (
+                        <img src={child.profileImage.startsWith('http') ? child.profileImage : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${child.profileImage}`} alt={child.name} style={{ width: '100px', height: '100px', borderRadius: '12px', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ width: '100px', height: '100px', borderRadius: '12px', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '2.5rem' }}>
+                          {child.name.charAt(0)}
+                        </div>
+                      )}
+                      
+                      <label style={{ position: 'absolute', bottom: '-5px', right: '-5px', background: 'var(--secondary)', color: 'white', width: '28px', height: '28px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '0.9rem', boxShadow: '0 2px 5px rgba(0,0,0,0.3)' }}>
+                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleImageUpload(e, 'childImage')} disabled={uploadingImage} />
+                        ✏️
+                      </label>
+                    </div>
                     <div>
                       <h1 style={{ fontSize: '2rem', margin: '0 0 0.5rem 0', color: 'var(--text-main)' }}>{child.name}</h1>
                       <span className="badge" style={{ background: 'var(--primary)', padding: '0.3rem 0.6rem', borderRadius: '4px', display: 'inline-block' }}>
@@ -238,9 +278,17 @@ export default function ChildProfile() {
                 </div>
               )}
 
-              {child.caregiverImages && child.caregiverImages.length > 0 && (
-                <div style={{ marginTop: '2rem' }}>
-                  <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: 'var(--text-main)' }}>Authorized Pickup (Visuals)</h3>
+              <div style={{ marginTop: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h3 style={{ fontSize: '1.2rem', margin: 0, color: 'var(--text-main)' }}>Authorized Pickup (Visuals)</h3>
+                  <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer' }}>
+                    <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={(e) => handleImageUpload(e, 'caregiverImages')} disabled={uploadingImage} />
+                    {uploadingImage ? 'Uploading...' : 'Add Caregiver Image'}
+                  </label>
+                </div>
+                {(!child.caregiverImages || child.caregiverImages.length === 0) ? (
+                  <p className="text-secondary">No authorized caregiver images added.</p>
+                ) : (
                   <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                     {child.caregiverImages.map((img: string, idx: number) => (
                       <img 
@@ -251,8 +299,8 @@ export default function ChildProfile() {
                       />
                     ))}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         )}

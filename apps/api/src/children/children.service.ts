@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Child, ChildDocument } from '../schemas/child.schema.js';
 import { ClassCategory, ClassCategoryDocument } from '../schemas/class-category.schema.js';
 import { Attendance, AttendanceDocument } from '../schemas/attendance.schema.js';
@@ -16,9 +16,9 @@ export class ChildrenService {
   ) {}
 
   async getCategories(branchId: string, mentorId?: string) {
-    const filter: any = { $or: [{ branchId }, { branchId: { $exists: false } }, { branchId: null }] };
+    const filter: any = { $or: [{ branchId: branchId ? new Types.ObjectId(branchId) : null }, { branchId: { $exists: false } }, { branchId: null }] };
     if (mentorId) {
-      filter.mentorIds = mentorId;
+      filter.mentorIds = new Types.ObjectId(mentorId);
     }
     return this.classCategoryModel.find(filter).sort({ name: 1 });
   }

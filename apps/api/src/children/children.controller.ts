@@ -69,4 +69,31 @@ export class ChildrenController {
   async updateChild(@Param('id') id: string, @Body() body: any, @Req() req: any) {
     return this.childrenService.updateChild(id, body, req.user.userId, req.user.role);
   }
+
+  @Patch(':id/images')
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'childImage', maxCount: 1 },
+    { name: 'caregiverImages', maxCount: 5 }
+  ], {
+    storage: getCloudinaryStorage('caregivers')
+  }))
+  async updateChildImages(
+    @Param('id') id: string, 
+    @Req() req: any, 
+    @UploadedFiles() files: { childImage?: Express.Multer.File[], caregiverImages?: Express.Multer.File[] }
+  ) {
+    const childImage = files?.childImage?.[0]?.path || files?.childImage?.[0]?.filename ? `/uploads/caregivers/${files.childImage[0].filename}` : undefined;
+    const caregiverImages = files?.caregiverImages?.map(f => f.path || `/uploads/caregivers/${f.filename}`);
+    
+    const profileImage = files?.childImage?.[0]?.path?.startsWith('http') ? files.childImage[0].path : childImage;
+    const resolvedCaregiverImages = files?.caregiverImages?.map(f => f.path?.startsWith('http') ? f.path : `/uploads/caregivers/${f.filename}`);
+
+    const updatePayload: any = {};
+    if (profileImage) updatePayload.profileImage = profileImage;
+    if (resolvedCaregiverImages && resolvedCaregiverImages.length > 0) {
+      updatePayload.$push = { caregiverImages: { $each: resolvedCaregiverImages } };
+    }
+
+    return this.childrenService.updateChild(id, updatePayload, req.user.userId, req.user.role);
+  }
 }
