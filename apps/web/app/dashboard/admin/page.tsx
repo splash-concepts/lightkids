@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { ResponsiveContainer, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Bar } from "recharts";
 import "../../page.css";
 import "../mentor/mentor.css"; // Reuse some styles
 
@@ -93,6 +94,23 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </div>
+
+            {stats?.chartData && (
+              <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem' }}>
+                <h3 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>Attendance Trend (Last 6 Months)</h3>
+                <div style={{ height: '300px', width: '100%' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={stats.chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                      <XAxis dataKey="name" stroke="var(--text-secondary)" />
+                      <YAxis stroke="var(--text-secondary)" allowDecimals={false} />
+                      <Tooltip contentStyle={{ background: 'var(--bg-main)', border: 'none', borderRadius: '8px', color: 'white' }} cursor={{fill: 'rgba(255,255,255,0.05)'}} />
+                      <Bar dataKey="Presents" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
 
             <div className="grid-2-col">
               {/* Management Links */}

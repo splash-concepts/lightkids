@@ -240,8 +240,9 @@ export default function UserDirectory() {
           {loading ? <p>Loading users...</p> : (
             <div className="users-list" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {users.length === 0 ? <p>No users found for this role.</p> : users.map(user => (
-                <div key={user._id} className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem' }}>
-                  <Link href={`/users/${user._id}`} style={{ textDecoration: 'none', color: 'inherit', flex: 1, display: 'block', cursor: 'pointer' }}>
+                <div key={user._id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <div className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem' }}>
+                    <Link href={`/users/${user._id}`} style={{ textDecoration: 'none', color: 'inherit', flex: 1, display: 'block', cursor: 'pointer' }}>
                     <div>
                       <h3 style={{ margin: 0 }}>{user.name}</h3>
                       <p style={{ margin: 0, color: 'var(--text-secondary)' }}>{user.email}</p>
@@ -257,7 +258,7 @@ export default function UserDirectory() {
                       </button>
                     )}
 
-                    {currentUser?.role === 'SUPER_ADMIN' && (
+                    {currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN' ? (
                       <>
                         <select 
                           value={user.role} 
@@ -269,6 +270,23 @@ export default function UserDirectory() {
                           <option value="MINISTER">MINISTER</option>
                           <option value="ADMIN">ADMIN</option>
                         </select>
+
+                        <input 
+                          type="text" 
+                          placeholder="Office (e.g. HOD)" 
+                          defaultValue={user.office || ""}
+                          onBlur={(e) => {
+                            const val = e.target.value;
+                            if (val !== user.office) {
+                              fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/users/${user._id}/role`, {
+                                method: 'PATCH',
+                                headers: { "Authorization": `Bearer ${localStorage.getItem('token')}`, "Content-Type": "application/json" },
+                                body: JSON.stringify({ office: val })
+                              }).then(() => fetchUsers(filterRole)).catch(console.error);
+                            }
+                          }}
+                          style={{ padding: '0.4rem', borderRadius: '4px', background: 'var(--bg-main)', color: 'white', border: '1px solid var(--border-color)', width: '120px' }}
+                        />
                         
                         <select 
                           value={user.branchId || ""} 
@@ -281,7 +299,7 @@ export default function UserDirectory() {
                           ))}
                         </select>
                       </>
-                    )}
+                    ) : null}
                   </div>
                 </div>
                 
@@ -309,10 +327,10 @@ export default function UserDirectory() {
                       </button>
                       <button onClick={() => setAssigningMentor(null)} className="btn btn-outline btn-sm">Cancel</button>
                     </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                    </div>
+                  )}
+                </div>
+              ))}
           </div>
         )}
         </div>

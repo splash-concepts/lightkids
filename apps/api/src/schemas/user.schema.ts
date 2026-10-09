@@ -42,6 +42,9 @@ export class User {
 
   @Prop({ type: Types.ObjectId, ref: 'Branch' })
   branchId?: Types.ObjectId; // Optional because SUPER_ADMIN might not have a branch
+
+  @Prop()
+  office?: string; // e.g. "HOD", "Head Of Class"
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

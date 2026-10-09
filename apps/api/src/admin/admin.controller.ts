@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, Req, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AdminService } from './admin.service.js';
 
@@ -116,9 +116,9 @@ export class AdminController {
   }
 
   @Patch('users/:id/role')
-  async updateUserRole(@Param('id') userId: string, @Body() body: { role: string }, @Req() req: any) {
-    this.checkSuperAdmin(req);
-    return this.adminService.updateUserRole(userId, body.role);
+  async updateUserRole(@Param('id') userId: string, @Body() body: { role?: string; office?: string }, @Req() req: any) {
+    this.checkAdmin(req);
+    return this.adminService.updateUserRole(userId, body, req.user.role);
   }
 
   @Patch('users/:id/classes')

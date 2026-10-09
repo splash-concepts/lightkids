@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument, UserRole } from '../schemas/user.schema.js';
@@ -42,7 +42,21 @@ export class AdminService {
 
     const presentToday = await this.attendanceModel.countDocuments(attendanceFilter);
 
-    return { totalParents, totalMentors, totalChildren, presentToday };
+    // Chart Data (Last 6 Months Trend)
+    const attendanceTrend = await this.attendanceModel.aggregate([
+      { $match: branchId ? { branchId } : {} },
+      { $group: {
+        _id: { $dateToString: { format: "%Y-%m", date: "$date" } },
+        Presents: { $sum: { $cond: [{ $eq: ["$status", AttendanceStatus.PRESENT] }, 1, 0] } }
+      }},
+      { $sort: { _id: 1 } },
+      { $limit: 6 }
+    ]);
+    
+    // Fill in default if empty
+    const chartData = attendanceTrend.length > 0 ? attendanceTrend.map(t => ({ name: t._id, Presents: t.Presents })) : [{ name: 'No Data', Presents: 0 }];
+
+    return { totalParents, totalMentors, totalChildren, presentToday, chartData };
   }
 
   async getUsers(role?: string, branchId?: string) {
@@ -149,8 +163,23 @@ export class AdminService {
     return user;
   }
 
-  async updateUserRole(userId: string, role: string) {
-    return this.userModel.findByIdAndUpdate(userId, { role }, { new: true });
+  async updateUserRole(userId: string, updateData: { role?: string; office?: string }, actorRole: string) {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    if (actorRole === 'ADMIN') {
+      if (user.role === 'SUPER_ADMIN' || user.role === 'MINISTER') {
+        throw new UnauthorizedException('Admin cannot modify SUPER_ADMIN or MINISTER accounts');
+      }
+      if (updateData.role === 'SUPER_ADMIN' || updateData.role === 'MINISTER') {
+        throw new UnauthorizedException('Admin cannot assign SUPER_ADMIN or MINISTER roles');
+      }
+    }
+
+    if (updateData.role) user.role = updateData.role as UserRole;
+    if (updateData.office !== undefined) user.office = updateData.office;
+
+    return user.save();
   }
 
   async assignClassesToMentor(userId: string, classIds: string[], branchId: string, isSuperAdmin: boolean) {
