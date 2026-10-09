@@ -3,12 +3,16 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Child, ChildDocument } from '../schemas/child.schema.js';
 import { ClassCategory, ClassCategoryDocument } from '../schemas/class-category.schema.js';
+import { Attendance, AttendanceDocument } from '../schemas/attendance.schema.js';
+import { AcademicMaterial, AcademicMaterialDocument } from '../schemas/academic-material.schema.js';
 
 @Injectable()
 export class ChildrenService {
   constructor(
     @InjectModel(Child.name) private childModel: Model<ChildDocument>,
-    @InjectModel(ClassCategory.name) private classCategoryModel: Model<ClassCategoryDocument>
+    @InjectModel(ClassCategory.name) private classCategoryModel: Model<ClassCategoryDocument>,
+    @InjectModel(Attendance.name) private attendanceModel: Model<AttendanceDocument>,
+    @InjectModel(AcademicMaterial.name) private materialModel: Model<AcademicMaterialDocument>
   ) {}
 
   async getCategories(branchId: string, mentorId?: string) {
@@ -70,6 +74,23 @@ export class ChildrenService {
 
   async getChildrenByClass(classCategoryId: string) {
     return this.childModel.find({ classCategoryId }).populate('parentIds', 'name email phoneNumber whatsappNumber');
+  }
+
+  async getChildProfile(childId: string, userId: string, role: string) {
+    const child = await this.childModel.findById(childId).populate('classCategoryId').populate('parentIds', 'name email');
+    if (!child) throw new NotFoundException('Child not found');
+    
+    if (role === 'PARENT' && !child.parentIds.some((p: any) => p._id.toString() === userId)) {
+      throw new UnauthorizedException('Not authorized to view this child');
+    }
+
+    const attendance = await this.attendanceModel.find({ childId }).sort({ date: -1 });
+    let materials = [];
+    if (child.classCategoryId) {
+      materials = await this.materialModel.find({ classCategoryId: child.classCategoryId._id }).sort({ createdAt: -1 });
+    }
+
+    return { child, attendance, materials };
   }
 
   async updateMedicalInfo(childId: string, medicalInfo: any) {

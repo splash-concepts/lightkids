@@ -52,6 +52,22 @@ export class AdminService {
     return this.userModel.find(filter).select('-password').sort({ createdAt: -1 });
   }
 
+  async getUserProfile(id: string) {
+    const user = await this.userModel.findById(id).select('-password');
+    if (!user) return null;
+    
+    let children: any[] = [];
+    let classes: any[] = [];
+    
+    if (user.role === UserRole.PARENT) {
+      children = await this.childModel.find({ parentIds: user._id }).populate('classCategoryId');
+    } else if (user.role === UserRole.MENTOR) {
+      classes = await this.classCategoryModel.find({ mentorIds: user._id });
+    }
+    
+    return { user, children, classes };
+  }
+
   async getChildren(branchId?: string) {
     const filter = branchId ? { branchId } : {};
     return this.childModel.find(filter).populate('classCategoryId').populate('parentIds', 'name email phoneNumber whatsappNumber').sort({ createdAt: -1 });

@@ -197,11 +197,13 @@ export default function UserDirectory() {
             <div className="users-list" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {users.length === 0 ? <p>No users found for this role.</p> : users.map(user => (
                 <div key={user._id} className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem' }}>
-                  <div>
-                    <h3 style={{ margin: 0 }}>{user.name}</h3>
-                    <p style={{ margin: 0, color: 'var(--text-secondary)' }}>{user.email}</p>
-                    <small>Joined: {new Date(user.createdAt).toLocaleDateString()}</small>
-                  </div>
+                  <Link href={`/users/${user._id}`} style={{ textDecoration: 'none', color: 'inherit', flex: 1, display: 'block', cursor: 'pointer' }}>
+                    <div>
+                      <h3 style={{ margin: 0 }}>{user.name}</h3>
+                      <p style={{ margin: 0, color: 'var(--text-secondary)' }}>{user.email}</p>
+                      <small>Joined: {new Date(user.createdAt).toLocaleDateString()}</small>
+                    </div>
+                  </Link>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <span className="badge" style={{ background: 'var(--bg-main)', padding: '0.5rem 1rem', borderRadius: '20px' }}>{user.role}</span>
                     

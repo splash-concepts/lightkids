@@ -59,6 +59,12 @@ export class ChildrenController {
     return this.childrenService.getChildrenByClass(classId);
   }
 
+  @Get(':id/profile')
+  async getChildProfile(@Param('id') id: string, @Req() req: any) {
+    // Only allow parents of the child, or staff
+    return this.childrenService.getChildProfile(id, req.user.userId, req.user.role);
+  }
+
   @Patch(':id/medical-info')
   async updateMedicalInfo(@Param('id') id: string, @Body() medicalInfo: any) {
     return this.childrenService.updateMedicalInfo(id, medicalInfo);

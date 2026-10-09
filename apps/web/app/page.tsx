@@ -76,16 +76,18 @@ export default function Home() {
             <h3 className="section-title">My Children & Handoff Codes</h3>
             <div className="kids-grid">
               {myKids.map(kid => (
-                <div key={kid._id} className="kid-card glass-panel">
-                  <div className="kid-info">
-                    <h4>{kid.name}</h4>
-                    <p>{kid.classCategoryId?.name || 'Assigned Class'}</p>
+                <Link href={`/children/${kid._id}`} key={kid._id} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div className="kid-card glass-panel" style={{ cursor: 'pointer', transition: 'transform 0.2s ease', '&:hover': { transform: 'translateY(-2px)' } } as any}>
+                    <div className="kid-info">
+                      <h4>{kid.name}</h4>
+                      <p>{kid.classCategoryId?.name || 'Assigned Class'}</p>
+                    </div>
+                    <div className="kid-code">
+                      <span>{kid.uniqueCode}</span>
+                      <small>Handoff Code</small>
+                    </div>
                   </div>
-                  <div className="kid-code">
-                    <span>{kid.uniqueCode}</span>
-                    <small>Handoff Code</small>
-                  </div>
-                </div>
+                </Link>
               ))}
             </div>
           </section>

@@ -39,6 +39,12 @@ export class AdminController {
     return this.adminService.getUsers(role, branchId);
   }
 
+  @Get('users/:id')
+  async getUser(@Param('id') id: string, @Req() req: any) {
+    this.checkStaff(req);
+    return this.adminService.getUserProfile(id);
+  }
+
   @Get('children')
   async getChildren(@Req() req: any) {
     this.checkStaff(req);
