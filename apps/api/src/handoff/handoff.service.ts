@@ -4,6 +4,8 @@ import { Model } from 'mongoose';
 import { HandoffLog, HandoffLogDocument, HandoffType } from '../schemas/handoff-log.schema.js';
 import { Child, ChildDocument } from '../schemas/child.schema.js';
 import { NotificationsGateway } from '../notifications/notifications.gateway.js';
+import { AttendanceService } from '../attendance/attendance.service.js';
+import { AttendanceStatus } from '../schemas/attendance.schema.js';
 
 @Injectable()
 export class HandoffService {
@@ -11,6 +13,7 @@ export class HandoffService {
     @InjectModel(HandoffLog.name) private handoffModel: Model<HandoffLogDocument>,
     @InjectModel(Child.name) private childModel: Model<ChildDocument>,
     private notificationsGateway: NotificationsGateway,
+    private attendanceService: AttendanceService,
   ) {}
 
   async verifyCode(code: string) {
@@ -51,6 +54,15 @@ export class HandoffService {
       verifiedByCode: code,
       loggedBy: loggedById,
       branchId: child.branchId,
+    });
+
+    // Log attendance
+    await this.attendanceService.markAttendance({
+      childId,
+      status: type === HandoffType.DROP_OFF ? AttendanceStatus.PRESENT : AttendanceStatus.PICKED_UP,
+      reason: `Handoff: ${type}`,
+      loggedBy: loggedById,
+      branchId: child.branchId.toString(),
     });
 
     // Notify all parents of the child

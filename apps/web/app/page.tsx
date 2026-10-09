@@ -77,12 +77,22 @@ export default function Home() {
             <div className="kids-grid">
               {myKids.map(kid => (
                 <Link href={`/children/${kid._id}`} key={kid._id} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <div className="kid-card glass-panel" style={{ cursor: 'pointer', transition: 'transform 0.2s ease', '&:hover': { transform: 'translateY(-2px)' } } as any}>
-                    <div className="kid-info">
+                  <div className="kid-card glass-panel" style={{ cursor: 'pointer', transition: 'transform 0.2s ease', position: 'relative', overflow: 'hidden', border: kid.todayAttendanceStatus === 'PRESENT' ? '2px solid var(--danger)' : '1px solid rgba(255,255,255,0.1)' } as any}>
+                    {kid.todayAttendanceStatus === 'PRESENT' && (
+                      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: 'var(--danger)', color: 'white', fontSize: '0.8rem', textAlign: 'center', padding: '0.2rem', fontWeight: 'bold' }}>
+                        Action Required: Pick up your child
+                      </div>
+                    )}
+                    {kid.todayAttendanceStatus === 'PICKED_UP' && (
+                      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, background: 'var(--accent)', color: 'white', fontSize: '0.8rem', textAlign: 'center', padding: '0.2rem', fontWeight: 'bold' }}>
+                        Picked Up
+                      </div>
+                    )}
+                    <div className="kid-info" style={{ marginTop: kid.todayAttendanceStatus ? '1.5rem' : '0' }}>
                       <h4>{kid.name}</h4>
                       <p>{kid.classCategoryId?.name || 'Assigned Class'}</p>
                     </div>
-                    <div className="kid-code">
+                    <div className="kid-code" style={{ marginTop: kid.todayAttendanceStatus ? '1.5rem' : '0' }}>
                       <span>{kid.uniqueCode}</span>
                       <small>Handoff Code</small>
                     </div>

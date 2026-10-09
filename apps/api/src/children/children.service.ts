@@ -69,7 +69,22 @@ export class ChildrenService {
   }
 
   async getChildrenByParent(parentId: string) {
-    return this.childModel.find({ parentIds: parentId }).populate('classCategoryId');
+    const kids = await this.childModel.find({ parentIds: parentId }).populate('classCategoryId').lean();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    for (const kid of kids) {
+      const attendance = await this.attendanceModel.findOne({
+        childId: kid._id,
+        date: { $gte: today, $lte: endOfDay }
+      }).sort({ date: -1 });
+      if (attendance) {
+        (kid as any).todayAttendanceStatus = attendance.status;
+      }
+    }
+    return kids;
   }
 
   async getChildrenByClass(classCategoryId: string) {

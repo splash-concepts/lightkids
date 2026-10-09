@@ -9,7 +9,7 @@ export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
 
   @Post('mark')
-  async markAttendance(@Body() body: { childId: string, status: AttendanceStatus, reason?: string }, @Req() req: any) {
+  async markAttendance(@Body() body: { childId?: string, userId?: string, status: AttendanceStatus, reason?: string }, @Req() req: any) {
     if (req.user.role !== 'MENTOR' && req.user.role !== 'ADMIN') {
       throw new UnauthorizedException('Only Mentors and Admins can log attendance');
     }

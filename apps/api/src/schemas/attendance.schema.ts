@@ -4,14 +4,18 @@ import { Document, Types } from 'mongoose';
 export type AttendanceDocument = Attendance & Document;
 
 export enum AttendanceStatus {
-  PRESENT = 'PRESENT',
+  PRESENT = 'PRESENT', // Dropped off
+  PICKED_UP = 'PICKED_UP', // Picked up (completed)
   ABSENT = 'ABSENT',
 }
 
 @Schema({ timestamps: true })
 export class Attendance {
-  @Prop({ type: Types.ObjectId, ref: 'Child', required: true })
-  childId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Child' })
+  childId?: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  userId?: Types.ObjectId; // For Mentor/Staff attendance
 
   @Prop({ required: true })
   date: Date;

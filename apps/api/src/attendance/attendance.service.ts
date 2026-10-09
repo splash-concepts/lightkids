@@ -7,13 +7,17 @@ import { Attendance, AttendanceDocument, AttendanceStatus } from '../schemas/att
 export class AttendanceService {
   constructor(@InjectModel(Attendance.name) private attendanceModel: Model<AttendanceDocument>) {}
 
-  async markAttendance(data: { childId: string; status: AttendanceStatus; reason?: string; loggedBy: string; branchId: string }) {
+  async markAttendance(data: { childId?: string; userId?: string; status: AttendanceStatus; reason?: string; loggedBy: string; branchId: string }) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const filter: any = { date: { $gte: today } };
+    if (data.childId) filter.childId = data.childId;
+    if (data.userId) filter.userId = data.userId;
+
     // Update if already marked today, otherwise create new
     return this.attendanceModel.findOneAndUpdate(
-      { childId: data.childId, date: { $gte: today } },
+      filter,
       { ...data, date: new Date() },
       { upsert: true, new: true }
     );

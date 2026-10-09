@@ -34,29 +34,65 @@ export class AdminService {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-    const attendanceFilter: any = {
-      date: { $gte: startOfDay, $lte: endOfDay },
-      status: AttendanceStatus.PRESENT
-    };
-    if (branchId) attendanceFilter.branchId = branchId;
-
-    const presentToday = await this.attendanceModel.countDocuments(attendanceFilter);
+    const presentOrPickedUp = [AttendanceStatus.PRESENT, AttendanceStatus.PICKED_UP];
 
     // Chart Data (Last 6 Months Trend)
     const attendanceTrend = await this.attendanceModel.aggregate([
       { $match: branchId ? { branchId } : {} },
       { $group: {
         _id: { $dateToString: { format: "%Y-%m", date: "$date" } },
-        Presents: { $sum: { $cond: [{ $eq: ["$status", AttendanceStatus.PRESENT] }, 1, 0] } }
+        Presents: { $sum: { $cond: [{ $in: ["$status", presentOrPickedUp] }, 1, 0] } }
       }},
       { $sort: { _id: 1 } },
       { $limit: 6 }
     ]);
     
-    // Fill in default if empty
     const chartData = attendanceTrend.length > 0 ? attendanceTrend.map(t => ({ name: t._id, Presents: t.Presents })) : [{ name: 'No Data', Presents: 0 }];
 
-    return { totalParents, totalMentors, totalChildren, presentToday, chartData };
+    // Today's Detailed Stats
+    const allMentors = await this.userModel.find({ role: UserRole.MENTOR, ...(branchId && { branchId }) });
+    const mentorAttendanceToday = await this.attendanceModel.find({
+      date: { $gte: startOfDay, $lte: endOfDay },
+      userId: { $exists: true },
+      ...(branchId && { branchId })
+    });
+    
+    // Mentor stats
+    const presentMentorIds = mentorAttendanceToday.filter(a => presentOrPickedUp.includes(a.status)).map(a => a.userId?.toString());
+    const absentMentors = allMentors.filter(m => !presentMentorIds.includes(m._id.toString()));
+
+    // Kids stats
+    const allKids = await this.childModel.find(branchId ? { branchId } : {}).populate('parentIds', 'name email phoneNumber whatsappNumber');
+    const kidAttendanceToday = await this.attendanceModel.find({
+      date: { $gte: startOfDay, $lte: endOfDay },
+      childId: { $exists: true },
+      ...(branchId && { branchId })
+    }).populate({
+      path: 'childId',
+      populate: [
+        { path: 'parentIds', select: 'name email phoneNumber whatsappNumber' },
+        { path: 'classCategoryId' }
+      ]
+    });
+    
+    const presentKidIds = kidAttendanceToday.filter(a => presentOrPickedUp.includes(a.status)).map(a => a.childId?._id?.toString() || a.childId?.toString());
+    const absentKids = allKids.filter(k => !presentKidIds.includes(k._id.toString()));
+
+    const presentKidsData = kidAttendanceToday.filter(a => a.status === AttendanceStatus.PRESENT).map(a => a.childId);
+    const pickedUpKidsData = kidAttendanceToday.filter(a => a.status === AttendanceStatus.PICKED_UP).map(a => a.childId);
+    const totalPresentAndPickedUp = presentKidsData.length + pickedUpKidsData.length;
+
+    return { 
+      totalParents, totalMentors, totalChildren, 
+      presentToday: totalPresentAndPickedUp, 
+      chartData,
+      today: {
+        absentMentors,
+        absentKids,
+        presentKids: presentKidsData,
+        pickedUpKids: pickedUpKidsData,
+      }
+    };
   }
 
   async getUsers(role?: string, branchId?: string) {

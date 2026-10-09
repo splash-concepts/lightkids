@@ -8,5 +8,6 @@ import { Attendance, AttendanceSchema } from '../schemas/attendance.schema.js';
   imports: [MongooseModule.forFeature([{ name: Attendance.name, schema: AttendanceSchema }])],
   controllers: [AttendanceController],
   providers: [AttendanceService],
+  exports: [AttendanceService],
 })
 export class AttendanceModule {}
