@@ -12,6 +12,9 @@ export default function ChildProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState<any>({});
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -60,7 +63,42 @@ export default function ChildProfile() {
   if (error) return <div className="home-container"><div style={{padding: '3rem', color: 'var(--danger)'}}>{error}</div></div>;
   if (!data || !data.child) return <div className="home-container"><div style={{padding: '3rem', color: 'white'}}>Child not found.</div></div>;
 
+  if (!data || !data.child) return <div className="home-container"><div style={{padding: '3rem', color: 'white'}}>Child not found.</div></div>;
+
   const { child, attendance, materials } = data;
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUpdating(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/${id}`, {
+        method: 'PATCH',
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editData.name,
+          dob: editData.dob,
+          medicalInfo: {
+            allergies: editData.medicalInfo?.allergies || '',
+            emergencyContacts: [{
+               name: editData.emergencyContactName || editData.medicalInfo?.emergencyContacts?.[0]?.name || '',
+               phone: editData.emergencyContactPhone || editData.medicalInfo?.emergencyContacts?.[0]?.phone || '',
+               relationship: 'Emergency'
+            }]
+          }
+        })
+      });
+      if (!res.ok) throw new Error("Failed to update profile");
+      
+      const updated = await res.json();
+      setData({ ...data, child: updated });
+      setIsEditing(false);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   return (
     <div className="home-container" style={{ minHeight: '100vh', padding: '2rem' }}>
@@ -80,37 +118,89 @@ export default function ChildProfile() {
         {activeTab === 'overview' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
             {/* Child Details */}
-            <div className="glass-panel" style={{ padding: '2rem' }}>
-              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                {child.profileImage ? (
-                  <img src={child.profileImage.startsWith('http') ? child.profileImage : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${child.profileImage}`} alt={child.name} style={{ width: '100px', height: '100px', borderRadius: '12px', objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ width: '100px', height: '100px', borderRadius: '12px', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '2.5rem' }}>
-                    {child.name.charAt(0)}
+            <div className="glass-panel" style={{ padding: '2rem', position: 'relative' }}>
+              {!isEditing ? (
+                <>
+                  <button onClick={() => {
+                    setEditData({
+                      name: child.name,
+                      dob: new Date(child.dob).toISOString().split('T')[0],
+                      medicalInfo: child.medicalInfo || {},
+                      emergencyContactName: child.medicalInfo?.emergencyContacts?.[0]?.name || '',
+                      emergencyContactPhone: child.medicalInfo?.emergencyContacts?.[0]?.phone || ''
+                    });
+                    setIsEditing(true);
+                  }} className="btn btn-outline btn-sm" style={{ position: 'absolute', top: '1rem', right: '1rem' }}>Edit Profile</button>
+
+                  <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                    {child.profileImage ? (
+                      <img src={child.profileImage.startsWith('http') ? child.profileImage : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${child.profileImage}`} alt={child.name} style={{ width: '100px', height: '100px', borderRadius: '12px', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: '100px', height: '100px', borderRadius: '12px', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '2.5rem' }}>
+                        {child.name.charAt(0)}
+                      </div>
+                    )}
+                    <div>
+                      <h1 style={{ fontSize: '2rem', margin: '0 0 0.5rem 0', color: 'var(--text-main)' }}>{child.name}</h1>
+                      <span className="badge" style={{ background: 'var(--primary)', padding: '0.3rem 0.6rem', borderRadius: '4px', display: 'inline-block' }}>
+                        {child.classCategoryId?.name || 'Unassigned'}
+                      </span>
+                    </div>
                   </div>
-                )}
-                <div>
-                  <h1 style={{ fontSize: '2rem', margin: '0 0 0.5rem 0', color: 'var(--text-main)' }}>{child.name}</h1>
-                  <span className="badge" style={{ background: 'var(--primary)', padding: '0.3rem 0.6rem', borderRadius: '4px', display: 'inline-block' }}>
-                    {child.classCategoryId?.name || 'Unassigned'}
-                  </span>
-                </div>
-              </div>
-              
-              <div style={{ marginTop: '1.5rem' }}>
-                <p style={{ margin: '0.5rem 0', color: 'var(--text-secondary)' }}>DOB: {new Date(child.dob).toLocaleDateString()}</p>
-                <p style={{ margin: '0.5rem 0', color: 'var(--text-secondary)' }}>Handoff Code: <strong>{child.uniqueCode}</strong></p>
-                
-                {child.medicalInfo && (
-                  <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-                    <h3 style={{ color: 'var(--danger)', fontSize: '1.1rem', marginBottom: '0.5rem' }}>Medical Alerts</h3>
-                    <p style={{ margin: '0.25rem 0', fontSize: '0.9rem' }}><strong>Allergies:</strong> {child.medicalInfo.allergies || 'None recorded'}</p>
-                    {child.medicalInfo.emergencyContacts?.map((ec: any, i: number) => (
-                      <p key={i} style={{ margin: '0.25rem 0', fontSize: '0.9rem' }}><strong>Emergency Contact:</strong> {ec.name} ({ec.phone}) - {ec.relationship}</p>
-                    ))}
+                  
+                  <div style={{ marginTop: '1.5rem' }}>
+                    <p style={{ margin: '0.5rem 0', color: 'var(--text-secondary)' }}>DOB: {new Date(child.dob).toLocaleDateString()}</p>
+                    <p style={{ margin: '0.5rem 0', color: 'var(--text-secondary)' }}>Handoff Code: <strong>{child.uniqueCode}</strong></p>
+                    
+                    {child.medicalInfo && (
+                      <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                        <h3 style={{ color: 'var(--danger)', fontSize: '1.1rem', marginBottom: '0.5rem' }}>Medical Alerts</h3>
+                        <p style={{ margin: '0.25rem 0', fontSize: '0.9rem' }}><strong>Allergies:</strong> {child.medicalInfo.allergies || 'None recorded'}</p>
+                        {child.medicalInfo.emergencyContacts?.map((ec: any, i: number) => (
+                          <p key={i} style={{ margin: '0.25rem 0', fontSize: '0.9rem' }}><strong>Emergency Contact:</strong> {ec.name} ({ec.phone}) - {ec.relationship}</p>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </>
+              ) : (
+                <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <h3 style={{ margin: 0, color: 'var(--primary)', marginBottom: '1rem' }}>Edit Child Profile</h3>
+                  
+                  <div className="input-group">
+                    <label>Full Name</label>
+                    <input type="text" required value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'white', width: '100%' }} />
+                  </div>
+                  
+                  <div className="input-group">
+                    <label>Date of Birth</label>
+                    <input type="date" required value={editData.dob} onChange={e => setEditData({...editData, dob: e.target.value})} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'white', width: '100%' }} />
+                    <small className="text-secondary">Updating this will automatically re-evaluate their assigned class.</small>
+                  </div>
+
+                  <div className="input-group">
+                    <label>Allergies</label>
+                    <input type="text" value={editData.medicalInfo?.allergies || ''} onChange={e => setEditData({...editData, medicalInfo: { ...editData.medicalInfo, allergies: e.target.value }})} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'white', width: '100%' }} />
+                  </div>
+
+                  <div className="input-group">
+                    <label>Emergency Contact Name</label>
+                    <input type="text" value={editData.emergencyContactName} onChange={e => setEditData({...editData, emergencyContactName: e.target.value})} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'white', width: '100%' }} />
+                  </div>
+
+                  <div className="input-group">
+                    <label>Emergency Contact Phone</label>
+                    <input type="text" value={editData.emergencyContactPhone} onChange={e => setEditData({...editData, emergencyContactPhone: e.target.value})} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'white', width: '100%' }} />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                    <button type="submit" className="btn btn-primary" disabled={updating}>
+                      {updating ? "Saving..." : "Save Changes"}
+                    </button>
+                    <button type="button" className="btn btn-outline" onClick={() => setIsEditing(false)}>Cancel</button>
+                  </div>
+                </form>
+              )}
             </div>
 
             {/* Parent Details */}

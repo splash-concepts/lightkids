@@ -93,13 +93,25 @@ export class ChildrenService {
     return { child, attendance, materials };
   }
 
-  async updateMedicalInfo(childId: string, medicalInfo: any) {
-    const child = await this.childModel.findByIdAndUpdate(
-      childId,
-      { medicalInfo },
-      { new: true }
-    );
+  async updateChild(childId: string, data: any, userId: string, role: string) {
+    const child = await this.childModel.findById(childId);
     if (!child) throw new NotFoundException('Child not found');
-    return child;
+
+    if (role === 'PARENT' && !child.parentIds.some((p: any) => p._id.toString() === userId)) {
+      throw new UnauthorizedException('Not authorized to update this child');
+    }
+
+    // Auto-assign class if dob is provided and class is unassigned or provided
+    if (data.dob && !data.classCategoryId) {
+      const today = new Date();
+      const ageInYears = (today.getTime() - new Date(data.dob).getTime()) / (1000 * 3600 * 24 * 365.25);
+      const categories = await this.classCategoryModel.find({ branchId: child.branchId });
+      const matchedCategory = categories.find(c => ageInYears >= (c.ageMin || 0) && ageInYears < (c.ageMax ? c.ageMax + 1 : 999));
+      if (matchedCategory) {
+        data.classCategoryId = matchedCategory._id;
+      }
+    }
+
+    return this.childModel.findByIdAndUpdate(childId, { $set: data }, { new: true });
   }
 }

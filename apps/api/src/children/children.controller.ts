@@ -65,8 +65,8 @@ export class ChildrenController {
     return this.childrenService.getChildProfile(id, req.user.userId, req.user.role);
   }
 
-  @Patch(':id/medical-info')
-  async updateMedicalInfo(@Param('id') id: string, @Body() medicalInfo: any) {
-    return this.childrenService.updateMedicalInfo(id, medicalInfo);
+  @Patch(':id')
+  async updateChild(@Param('id') id: string, @Body() body: any, @Req() req: any) {
+    return this.childrenService.updateChild(id, body, req.user.userId, req.user.role);
   }
 }
