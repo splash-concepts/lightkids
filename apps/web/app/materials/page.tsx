@@ -37,8 +37,8 @@ export default function MaterialsPage() {
         if (Array.isArray(data)) {
           setCategories(data);
           if (data.length > 0) {
-            setFormData(prev => ({ ...prev, classCategoryId: data[0]._id }));
-            fetchMaterials(data[0]._id);
+            setFormData(prev => ({ ...prev, classCategoryId: 'all' }));
+            fetchMaterials('all');
           } else {
             setLoading(false);
           }
@@ -57,7 +57,11 @@ export default function MaterialsPage() {
   const fetchMaterials = async (classId: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/materials/class/${classId}`, {
+      const url = classId === 'all' 
+        ? `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/materials/all`
+        : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/materials/class/${classId}`;
+      
+      const response = await fetch(url, {
         headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
       });
       const data = await response.json();
@@ -168,13 +172,19 @@ export default function MaterialsPage() {
 
           {/* Feed Section */}
           <div className="feed-card glass-panel animate-fade-in">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <h3>Materials Feed</h3>
-              {(role === "PARENT") && (
-                <select value={formData.classCategoryId} onChange={handleClassChange} style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-light)' }}>
-                  {categories.map(cat => <option key={cat._id} value={cat._id}>{cat.name} Class</option>)}
-                </select>
-              )}
+              <select 
+                value={formData.classCategoryId} 
+                onChange={(e) => {
+                  setFormData({...formData, classCategoryId: e.target.value});
+                  fetchMaterials(e.target.value);
+                }} 
+                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border-light)', minWidth: '150px' }}
+              >
+                <option value="all">All Accessible Classes</option>
+                {categories.map(cat => <option key={cat._id} value={cat._id}>{cat.name} Class</option>)}
+              </select>
             </div>
 
             <div className="materials-list">

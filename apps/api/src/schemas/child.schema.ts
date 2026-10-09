@@ -14,6 +14,9 @@ export class Child {
   @Prop({ required: true })
   dob: Date; // Important for age cross promotions
 
+  @Prop()
+  gender?: string;
+
   @Prop({ type: Types.ObjectId, ref: 'ClassCategory' })
   classCategoryId: Types.ObjectId;
 
@@ -38,6 +41,9 @@ export class Child {
 
   @Prop({ type: Types.ObjectId, ref: 'Branch', required: true })
   branchId: Types.ObjectId;
+
+  @Prop({ type: [{ note: String, date: Date, teacherId: { type: Types.ObjectId, ref: 'User' } }] })
+  teacherNotes?: Array<{ note: string; date: Date; teacherId: Types.ObjectId }>;
 }
 
 export const ChildSchema = SchemaFactory.createForClass(Child);

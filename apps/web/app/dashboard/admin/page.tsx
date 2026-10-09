@@ -11,6 +11,32 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
+  const [serviceLinks, setServiceLinks] = useState<any[]>([]);
+  const [newServiceLink, setNewServiceLink] = useState({ title: "", url: "" });
+  
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedClassMap, setSelectedClassMap] = useState<Record<string, string>>({});
+  const [teacherNoteMap, setTeacherNoteMap] = useState<Record<string, string>>({});
+
+  const fetchCategories = () => {
+    const token = localStorage.getItem("token");
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/categories`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setCategories(data); })
+      .catch(console.error);
+  };
+
+  const fetchServiceLinks = () => {
+    const token = localStorage.getItem("token");
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/service-links`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setServiceLinks(data); })
+      .catch(console.error);
+  };
 
   const fetchStats = () => {
     setLoading(true);
@@ -40,6 +66,8 @@ export default function AdminDashboard() {
       return;
     }
     fetchStats();
+    fetchCategories();
+    fetchServiceLinks();
   }, []);
 
   const handleMarkMentorAttendance = (userId: string, isAbsent: boolean) => {
@@ -49,6 +77,58 @@ export default function AdminDashboard() {
       headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ userId, status: isAbsent ? 'ABSENT' : 'PRESENT' })
     }).then(() => fetchStats()).catch(e => alert(e.message));
+  };
+
+  const handlePromote = async (childId: string) => {
+    const newClassCategoryId = selectedClassMap[childId];
+    if (!newClassCategoryId) {
+      alert("Please select a target class first.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/${childId}/promote`, {
+        method: "PATCH",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ newClassCategoryId, note: teacherNoteMap[childId] || "" }), 
+      });
+      if (response.ok) {
+        alert("Child promoted successfully!");
+        fetchStats();
+      } else {
+        alert("Failed to promote child.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred.");
+    }
+  };
+
+  const handleCreateServiceLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/service-links`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(newServiceLink), 
+      });
+      if (response.ok) {
+        alert("Service link created successfully!");
+        setNewServiceLink({ title: "", url: "" });
+        fetchServiceLinks();
+      } else {
+        alert("Failed to create service link.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred.");
+    }
   };
 
   return (
@@ -92,6 +172,8 @@ export default function AdminDashboard() {
                 Absent Kids {stats?.today?.absentKids?.length > 0 && <span style={{background:'var(--danger)', color:'white', borderRadius:'10px', padding:'0.1rem 0.5rem', marginLeft:'0.5rem', fontSize:'0.8rem'}}>{stats.today.absentKids.length}</span>}
               </button>
               <button className={`btn ${activeTab === 'kids_present' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('kids_present')}>Today's Kids ({stats?.presentToday || 0})</button>
+              <button className={`btn ${activeTab === 'promotions' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('promotions')}>Due for Promotion</button>
+              <button className={`btn ${activeTab === 'service_links' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setActiveTab('service_links')}>Service Links</button>
             </div>
 
             {activeTab === 'overview' && (
@@ -219,6 +301,47 @@ export default function AdminDashboard() {
                     </div>
                   ))}
                 </div>
+                
+                {stats?.pastWeekAbsents && stats.pastWeekAbsents.length > 0 && (
+                  <div style={{ marginTop: '3rem' }}>
+                    <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Past 7 Days Absences</h3>
+                    <div style={{ overflowX: 'auto', background: 'var(--bg-main)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)' }}>
+                            <th style={{ padding: '1rem' }}>Date</th>
+                            <th style={{ padding: '1rem' }}>Child Name</th>
+                            <th style={{ padding: '1rem' }}>Class</th>
+                            <th style={{ padding: '1rem' }}>Parent Contact</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {stats.pastWeekAbsents.map((record: any) => (
+                            <tr key={record._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                              <td style={{ padding: '1rem', color: 'var(--text-secondary)' }}>
+                                {new Date(record.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                              </td>
+                              <td style={{ padding: '1rem', fontWeight: 'bold' }}>{record.childId?.name}</td>
+                              <td style={{ padding: '1rem' }}>
+                                <span className="badge" style={{ background: 'var(--accent)', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem' }}>
+                                  {record.childId?.classCategoryId?.name || 'Class'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '1rem' }}>
+                                {record.childId?.parentIds?.map((p: any, idx: number) => (
+                                  <div key={idx} style={{ fontSize: '0.85rem', marginBottom: '0.25rem' }}>
+                                    {p.name}: {p.phoneNumber ? <a href={`tel:${p.phoneNumber}`} style={{ color: 'var(--secondary)', marginRight: '0.5rem' }}>{p.phoneNumber}</a> : null}
+                                    {p.whatsappNumber ? <a href={`https://wa.me/${p.whatsappNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" style={{ color: '#25D366' }}>WhatsApp</a> : null}
+                                  </div>
+                                ))}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -256,7 +379,100 @@ export default function AdminDashboard() {
                       </div>
                     )}
                   </div>
-                  
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'promotions' && (
+              <div className="glass-panel" style={{ padding: '2rem' }}>
+                <h3 style={{ marginBottom: '1.5rem', color: 'var(--accent)' }}>Due for Promotion</h3>
+                <p className="text-secondary mb-4">Children who have crossed the age threshold for their current class.</p>
+                
+                <div style={{ display: 'grid', gap: '1rem' }}>
+                  {stats?.today?.promotableKids?.length === 0 ? <p>No children require promotion at this time.</p> : stats?.today?.promotableKids?.map((child: any) => (
+                    <div key={child._id} style={{ padding: '1.5rem', background: 'var(--bg-main)', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+                      <div className="child-info" style={{ flex: '1 1 100%' }}>
+                        <h4 style={{ margin: '0 0 0.5rem 0' }}>{child.name}</h4>
+                        <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Current: {child.classCategoryId?.name} • DOB: {new Date(child.dob).toLocaleDateString()}</p>
+                      </div>
+                      
+                      <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <select 
+                          value={selectedClassMap[child._id] || ""} 
+                          onChange={(e) => setSelectedClassMap({ ...selectedClassMap, [child._id]: e.target.value })}
+                          style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-light)', background: 'var(--bg-light)', color: 'var(--text-main)' }}
+                        >
+                          <option value="">Select Next Class...</option>
+                          {categories.map(cat => (
+                            <option key={cat._id} value={cat._id}>{cat.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <div style={{ flex: '1 1 250px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <input 
+                          type="text" 
+                          placeholder="Teacher/Admin Note (Optional)" 
+                          value={teacherNoteMap[child._id] || ""} 
+                          onChange={(e) => setTeacherNoteMap({ ...teacherNoteMap, [child._id]: e.target.value })}
+                          style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-light)', background: 'var(--bg-light)', color: 'var(--text-main)' }}
+                        />
+                      </div>
+                      
+                      <button className="btn btn-primary" onClick={() => handlePromote(child._id)}>
+                        Approve Promotion
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'service_links' && (
+              <div className="glass-panel" style={{ padding: '2rem' }}>
+                <h3 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>Private Service Links</h3>
+                <p className="text-secondary mb-4">Create links for private broadcasts or internal team meetings. Mentors can view these from their dashboard.</p>
+                
+                <form onSubmit={handleCreateServiceLink} style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+                  <input 
+                    type="text" 
+                    placeholder="Link Title (e.g. Sunday Service Broadcast)" 
+                    value={newServiceLink.title}
+                    onChange={(e) => setNewServiceLink({...newServiceLink, title: e.target.value})}
+                    style={{ flex: 1, padding: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-light)', background: 'var(--bg-light)' }}
+                    required
+                  />
+                  <input 
+                    type="url" 
+                    placeholder="https://..." 
+                    value={newServiceLink.url}
+                    onChange={(e) => setNewServiceLink({...newServiceLink, url: e.target.value})}
+                    style={{ flex: 1, padding: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-light)', background: 'var(--bg-light)' }}
+                    required
+                  />
+                  <button type="submit" className="btn btn-primary">Create Link</button>
+                </form>
+
+                <div style={{ display: 'grid', gap: '1rem' }}>
+                  {serviceLinks.length === 0 ? <p>No service links created yet.</p> : serviceLinks.map((link: any) => (
+                    <div key={link._id} style={{ padding: '1rem', background: 'var(--bg-main)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                        <div>
+                          <h4 style={{ margin: '0 0 0.5rem 0' }}>{link.title}</h4>
+                          <a href={link.url} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none', fontSize: '0.9rem' }}>{link.url}</a>
+                          <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Created: {new Date(link.createdAt).toLocaleString()}</p>
+                        </div>
+                        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px', minWidth: '200px' }}>
+                          <h5 style={{ margin: '0 0 0.5rem 0', color: 'var(--secondary)' }}>Viewed By ({link.viewedBy?.length || 0})</h5>
+                          {link.viewedBy?.length > 0 ? (
+                            <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem' }}>
+                              {link.viewedBy.map((u: any) => <li key={u._id}>{u.name} ({u.role})</li>)}
+                            </ul>
+                          ) : <span style={{ fontSize: '0.85rem' }}>No views yet</span>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

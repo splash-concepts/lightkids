@@ -64,8 +64,12 @@ export class ChildrenService {
     });
   }
 
-  async promoteChild(childId: string, newClassCategoryId: string) {
-    return this.childModel.findByIdAndUpdate(childId, { classCategoryId: newClassCategoryId }, { new: true });
+  async promoteChild(childId: string, newClassCategoryId: string, note?: string, teacherId?: string) {
+    const updatePayload: any = { classCategoryId: newClassCategoryId };
+    if (note && teacherId) {
+      updatePayload.$push = { teacherNotes: { note, date: new Date(), teacherId } };
+    }
+    return this.childModel.findByIdAndUpdate(childId, updatePayload, { new: true });
   }
 
   async getChildrenByParent(parentId: string) {

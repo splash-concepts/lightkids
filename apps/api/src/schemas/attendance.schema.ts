@@ -26,6 +26,9 @@ export class Attendance {
   @Prop()
   reason?: string; // e.g. "Sick", "Travelled"
 
+  @Prop()
+  gender?: string;
+
   @Prop({ type: Types.ObjectId, ref: 'User' })
   loggedBy: Types.ObjectId; // Parent or Mentor
 

@@ -36,15 +36,14 @@ export class AdminService {
 
     const presentOrPickedUp = [AttendanceStatus.PRESENT, AttendanceStatus.PICKED_UP];
 
-    // Chart Data (Last 6 Months Trend)
+    // Chart Data (All Time Trend)
     const attendanceTrend = await this.attendanceModel.aggregate([
       { $match: branchId ? { branchId } : {} },
       { $group: {
         _id: { $dateToString: { format: "%Y-%m", date: "$date" } },
         Presents: { $sum: { $cond: [{ $in: ["$status", presentOrPickedUp] }, 1, 0] } }
       }},
-      { $sort: { _id: 1 } },
-      { $limit: 6 }
+      { $sort: { _id: 1 } }
     ]);
     
     const chartData = attendanceTrend.length > 0 ? attendanceTrend.map(t => ({ name: t._id, Presents: t.Presents })) : [{ name: 'No Data', Presents: 0 }];
@@ -62,7 +61,7 @@ export class AdminService {
     const absentMentors = allMentors.filter(m => !presentMentorIds.includes(m._id.toString()));
 
     // Kids stats
-    const allKids = await this.childModel.find(branchId ? { branchId } : {}).populate('parentIds', 'name email phoneNumber whatsappNumber');
+    const allKids = await this.childModel.find(branchId ? { branchId } : {}).populate('parentIds', 'name email phoneNumber whatsappNumber').populate('classCategoryId');
     const kidAttendanceToday = await this.attendanceModel.find({
       date: { $gte: startOfDay, $lte: endOfDay },
       childId: { $exists: true },
@@ -82,6 +81,31 @@ export class AdminService {
     const pickedUpKidsData = kidAttendanceToday.filter(a => a.status === AttendanceStatus.PICKED_UP).map(a => a.childId);
     const totalPresentAndPickedUp = presentKidsData.length + pickedUpKidsData.length;
 
+    // Past 7 Days Absents
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    oneWeekAgo.setHours(0, 0, 0, 0);
+    const pastWeekAbsents = await this.attendanceModel.find({
+      date: { $gte: oneWeekAgo, $lt: startOfDay },
+      status: AttendanceStatus.ABSENT,
+      childId: { $exists: true },
+      ...(branchId && { branchId })
+    }).populate({
+      path: 'childId',
+      populate: [
+        { path: 'parentIds', select: 'name phoneNumber whatsappNumber' },
+        { path: 'classCategoryId', select: 'name' }
+      ]
+    }).sort({ date: -1 });
+
+    const now = new Date();
+    const promotableKids = allKids.filter(child => {
+      if (!child.dob || !child.classCategoryId) return false;
+      const ageInYears = (now.getTime() - new Date(child.dob).getTime()) / (1000 * 3600 * 24 * 365.25);
+      const category: any = child.classCategoryId;
+      return category.ageMax && ageInYears >= (category.ageMax + 1);
+    });
+
     return { 
       totalParents, totalMentors, totalChildren, 
       presentToday: totalPresentAndPickedUp, 
@@ -91,7 +115,9 @@ export class AdminService {
         absentKids,
         presentKids: presentKidsData,
         pickedUpKids: pickedUpKidsData,
-      }
+        promotableKids,
+      },
+      pastWeekAbsents,
     };
   }
 

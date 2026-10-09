@@ -42,11 +42,11 @@ export class ChildrenController {
   }
 
   @Patch(':id/promote')
-  async promoteChild(@Param('id') id: string, @Body('newClassCategoryId') newClassCategoryId: string, @Req() req: any) {
+  async promoteChild(@Param('id') id: string, @Body() body: { newClassCategoryId: string; note?: string }, @Req() req: any) {
     if (req.user.role !== 'ADMIN') {
       throw new UnauthorizedException('Only Admins can approve promotions');
     }
-    return this.childrenService.promoteChild(id, newClassCategoryId);
+    return this.childrenService.promoteChild(id, body.newClassCategoryId, body.note, req.user.userId);
   }
 
   @Get('my-kids')

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import "../../page.css";
 import "./mentor.css";
 
@@ -10,6 +11,7 @@ export default function MentorDashboard() {
   const [children, setChildren] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<Record<string, 'PRESENT' | 'ABSENT'>>({});
   const [user, setUser] = useState<any>(null);
+  const [serviceLinks, setServiceLinks] = useState<any[]>([]);
   
   const [materialForm, setMaterialForm] = useState({ title: "", type: "Sermon Note", content: "" });
 
@@ -30,6 +32,15 @@ export default function MentorDashboard() {
           setClasses(data);
           if (data.length > 0) setSelectedClass(data[0]);
         }
+      })
+      .catch(console.error);
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/service-links`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setServiceLinks(data);
       })
       .catch(console.error);
   }, []);
@@ -100,6 +111,17 @@ export default function MentorDashboard() {
     }
   };
 
+  const handleViewServiceLink = async (link: any) => {
+    // Open in new tab
+    window.open(link.url, '_blank');
+    // Log view
+    const token = localStorage.getItem('token');
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/service-links/${link._id}/view`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${token}` }
+    }).catch(console.error);
+  };
+
   const presentCount = Object.values(attendance).filter(s => s === 'PRESENT').length;
   const absentCount = Object.values(attendance).filter(s => s === 'ABSENT').length;
   return (
@@ -125,6 +147,9 @@ export default function MentorDashboard() {
       </header>
 
       <div className="dashboard-content">
+        <div style={{ marginBottom: '1rem' }}>
+          <Link href="/" className="back-link">← Back to Dashboard</Link>
+        </div>
         <section className="welcome-section animate-fade-in" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h2 className="welcome-title">Your Class Overview 📚</h2>
@@ -207,8 +232,25 @@ export default function MentorDashboard() {
               </div>
             </div>
 
+            {/* Service Links Section */}
+            <div className="action-card glass-panel hover-lift" style={{ marginTop: '2rem' }}>
+              <h3 className="card-title">Private Service Links</h3>
+              <p className="text-secondary mb-4">Internal broadcasts and team meetings.</p>
+              <div style={{ display: 'grid', gap: '1rem' }}>
+                {serviceLinks.length === 0 ? <p>No service links available.</p> : serviceLinks.map(link => (
+                  <div key={link._id} style={{ padding: '1rem', background: 'var(--bg-light)', borderRadius: '8px', border: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <h4 style={{ margin: '0 0 0.25rem 0' }}>{link.title}</h4>
+                      <small className="text-secondary">{new Date(link.createdAt).toLocaleString()}</small>
+                    </div>
+                    <button onClick={() => handleViewServiceLink(link)} className="btn btn-outline btn-sm">View Link</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Upload Material Section */}
-            <div className="action-card glass-panel hover-lift">
+            <div className="action-card glass-panel hover-lift" style={{ marginTop: '2rem' }}>
               <h3 className="card-title">Upload Academic Material</h3>
               <p className="text-secondary mb-4">Share assignments, projects, or sermon notes with parents.</p>
               

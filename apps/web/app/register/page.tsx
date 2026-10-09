@@ -18,6 +18,7 @@ export default function RegisterChild() {
   const [formData, setFormData] = useState({
     name: "",
     dob: "",
+    gender: "",
     classCategoryId: "",
     allergies: "",
     emergencyContact: "",
@@ -41,21 +42,28 @@ export default function RegisterChild() {
       } catch(e) {}
     }
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/categories`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setCategories(data);
-        } else {
+    const fetchCategories = (tokenStr: string | null) => {
+      const headers: any = {};
+      if (tokenStr) headers["Authorization"] = `Bearer ${tokenStr}`;
+      
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/children/categories`, { headers })
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setCategories(data);
+          } else {
+            setCategories([]);
+          }
+          setLoadingCategories(false);
+        })
+        .catch(err => {
+          console.error("Failed to fetch categories", err);
           setCategories([]);
-        }
-        setLoadingCategories(false);
-      })
-      .catch(err => {
-        console.error("Failed to fetch categories", err);
-        setCategories([]);
-        setLoadingCategories(false);
-      });
+          setLoadingCategories(false);
+        });
+    };
+
+    fetchCategories(token);
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -81,7 +89,8 @@ export default function RegisterChild() {
       const formDataToSend = new FormData();
       formDataToSend.append("name", formData.name);
       formDataToSend.append("dob", formData.dob);
-      // classCategoryId is intentionally omitted to allow backend auto-assignment based on dob
+      if (formData.gender) formDataToSend.append("gender", formData.gender);
+      if (formData.classCategoryId) formDataToSend.append("classCategoryId", formData.classCategoryId);
       formDataToSend.append("medicalInfo[allergies]", formData.allergies);
       formDataToSend.append("medicalInfo[emergencyContacts][0][name]", formData.emergencyContact);
       
@@ -114,7 +123,7 @@ export default function RegisterChild() {
       setSuccess(true);
       // Reset form
       setFormData({
-        name: "", dob: "", classCategoryId: categories[0]?._id || "", allergies: "", emergencyContact: "", parentId: ""
+        name: "", dob: "", gender: "", classCategoryId: categories[0]?._id || "", allergies: "", emergencyContact: "", parentId: ""
       });
       setChildImageFile(null);
       setFiles([]);
@@ -164,13 +173,30 @@ export default function RegisterChild() {
                 <input type="date" name="dob" value={formData.dob} onChange={handleChange} required />
               </div>
               <div className="input-group">
-                <label>Assigned Class</label>
-                <input 
-                  type="text" 
-                  value="Auto-assigned based on age" 
-                  disabled 
-                  style={{ opacity: 0.7, cursor: 'not-allowed' }}
-                />
+                <label>Gender <span className="required">*</span></label>
+                <select 
+                  className="select-input" 
+                  name="gender" 
+                  value={formData.gender} 
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+              <div className="input-group">
+                <label>Class Category (Optional)</label>
+                <select 
+                  className="select-input" 
+                  name="classCategoryId" 
+                  value={formData.classCategoryId} 
+                  onChange={handleChange}
+                >
+                  <option value="">Auto-assign based on age</option>
+                  {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                </select>
               </div>
             </div>
             {currentUserRole !== "PARENT" && (

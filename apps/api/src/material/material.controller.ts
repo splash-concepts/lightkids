@@ -29,6 +29,11 @@ export class MaterialController {
     });
   }
 
+  @Get('all')
+  async getAllMaterials(@Query('type') type: MaterialType, @Req() req: any) {
+    return this.materialService.getAllMaterials(req.user, type);
+  }
+
   @Get('class/:classId')
   async getByClass(@Param('classId') classId: string, @Query('type') type: MaterialType, @Req() req: any) {
     return this.materialService.getMaterialsByClass(classId, req.user.branchId, type);
