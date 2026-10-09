@@ -202,30 +202,32 @@ export default function RegisterChild() {
           <div className="form-section">
             <h3>Photos (For Handoff Verification)</h3>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div className="file-upload-zone" style={{ padding: '1rem', minHeight: 'auto' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+              <div className="file-upload-zone" style={{ padding: '1rem', minHeight: 'auto', textAlign: 'center' }}>
                 <span className="upload-icon"></span>
-                <p>Upload Child's Photo</p>
+                <p style={{ wordBreak: 'break-word', fontSize: '0.9rem' }}>Upload Child's Photo</p>
                 <input 
                   type="file" 
                   accept="image/*" 
                   onChange={(e) => setChildImageFile(e.target.files?.[0] || null)} 
                   className="file-input"
+                  style={{ width: '100%', maxWidth: '200px', margin: '0 auto' }}
                 />
-                <p className="text-secondary">{childImageFile ? "1 file selected" : "No file chosen"}</p>
+                <p className="text-secondary" style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>{childImageFile ? "1 file selected" : "No file chosen"}</p>
               </div>
 
-              <div className="file-upload-zone" style={{ padding: '1rem', minHeight: 'auto' }}>
+              <div className="file-upload-zone" style={{ padding: '1rem', minHeight: 'auto', textAlign: 'center' }}>
                 <span className="upload-icon"></span>
-                <p>Upload Parent / Caregiver Photos</p>
+                <p style={{ wordBreak: 'break-word', fontSize: '0.9rem' }}>Upload Parent / Caregiver Photos</p>
                 <input 
                   type="file" 
                   multiple 
                   accept="image/*" 
                   onChange={handleFileChange} 
                   className="file-input"
+                  style={{ width: '100%', maxWidth: '200px', margin: '0 auto' }}
                 />
-                <p className="text-secondary">{files.length} file(s) selected</p>
+                <p className="text-secondary" style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>{files.length} file(s) selected</p>
               </div>
             </div>
           </div>
