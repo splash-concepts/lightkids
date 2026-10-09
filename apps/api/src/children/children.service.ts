@@ -89,8 +89,9 @@ export class ChildrenService {
     if (child.classCategoryId) {
       materials = await this.materialModel.find({ classCategoryId: child.classCategoryId._id }).sort({ createdAt: -1 });
     }
+    const classes = await this.classCategoryModel.find({ branchId: child.branchId });
 
-    return { child, attendance, materials };
+    return { child, attendance, materials, classes };
   }
 
   async updateChild(childId: string, data: any, userId: string, role: string) {

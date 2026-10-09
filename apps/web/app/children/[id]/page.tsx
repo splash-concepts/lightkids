@@ -63,9 +63,7 @@ export default function ChildProfile() {
   if (error) return <div className="home-container"><div style={{padding: '3rem', color: 'var(--danger)'}}>{error}</div></div>;
   if (!data || !data.child) return <div className="home-container"><div style={{padding: '3rem', color: 'white'}}>Child not found.</div></div>;
 
-  if (!data || !data.child) return <div className="home-container"><div style={{padding: '3rem', color: 'white'}}>Child not found.</div></div>;
-
-  const { child, attendance, materials } = data;
+  const { child, attendance, materials, classes = [] } = data;
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +76,7 @@ export default function ChildProfile() {
         body: JSON.stringify({
           name: editData.name,
           dob: editData.dob,
+          classCategoryId: editData.classCategoryId || undefined,
           medicalInfo: {
             allergies: editData.medicalInfo?.allergies || '',
             emergencyContacts: [{
@@ -178,6 +177,18 @@ export default function ChildProfile() {
                     <small className="text-secondary">Updating this will automatically re-evaluate their assigned class.</small>
                   </div>
 
+                  {classes.length > 0 && (
+                    <div className="input-group">
+                      <label>Assigned Class</label>
+                      <select value={editData.classCategoryId || ""} onChange={e => setEditData({...editData, classCategoryId: e.target.value})} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'white', width: '100%' }}>
+                        <option value="">Auto-assign based on age</option>
+                        {classes.map((c: any) => (
+                          <option key={c._id} value={c._id}>{c.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   <div className="input-group">
                     <label>Allergies</label>
                     <input type="text" value={editData.medicalInfo?.allergies || ''} onChange={e => setEditData({...editData, medicalInfo: { ...editData.medicalInfo, allergies: e.target.value }})} style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', color: 'white', width: '100%' }} />
@@ -241,21 +252,17 @@ export default function ChildProfile() {
         {activeTab === 'attendance' && (
           <div className="glass-panel" style={{ padding: '2rem' }}>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem', color: 'var(--text-main)' }}>Attendance Statistics (By Month)</h2>
-            {attendanceStats.length === 0 ? (
-              <p className="text-secondary">No attendance data to generate a chart.</p>
-            ) : (
-              <div style={{ height: '400px', width: '100%' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={attendanceStats}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                    <XAxis dataKey="name" stroke="var(--text-secondary)" />
-                    <YAxis stroke="var(--text-secondary)" allowDecimals={false} />
-                    <Tooltip contentStyle={{ background: 'var(--bg-main)', border: 'none', borderRadius: '8px', color: 'white' }} />
-                    <Bar dataKey="Presents" fill="var(--primary)" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
+            <div style={{ height: '400px', width: '100%' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={attendanceStats.length > 0 ? attendanceStats : [{ name: 'No Data', Presents: 0 }]}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <XAxis dataKey="name" stroke="var(--text-secondary)" />
+                  <YAxis stroke="var(--text-secondary)" allowDecimals={false} />
+                  <Tooltip contentStyle={{ background: 'var(--bg-main)', border: 'none', borderRadius: '8px', color: 'white' }} cursor={{fill: 'rgba(255,255,255,0.05)'}} />
+                  <Bar dataKey="Presents" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
 
             <h3 style={{ fontSize: '1.2rem', margin: '3rem 0 1rem 0', color: 'var(--text-main)' }}>Recent History</h3>
             {attendance?.length === 0 ? (

@@ -16,6 +16,10 @@ export default function UserDirectory() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newStaff, setNewStaff] = useState({ name: "", email: "", password: "", role: "MENTOR" });
   const [creating, setCreating] = useState(false);
+  const [classCategories, setClassCategories] = useState<any[]>([]);
+  const [assigningMentor, setAssigningMentor] = useState<any>(null);
+  const [mentorClasses, setMentorClasses] = useState<string[]>([]);
+  const [updatingClasses, setUpdatingClasses] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -30,6 +34,12 @@ export default function UserDirectory() {
             if (Array.isArray(data)) setBranches(data);
           }).catch(console.error);
         }
+        
+        fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/class-categories`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        }).then(r => r.json()).then(data => {
+          if (Array.isArray(data)) setClassCategories(data);
+        }).catch(console.error);
       } catch (e) { console.error(e); }
     }
   }, []);
@@ -122,6 +132,40 @@ export default function UserDirectory() {
     }
   };
 
+  const handleStartAssigning = (user: any) => {
+    // Find all classes this user is currently a mentor of
+    const assigned = classCategories.filter(c => c.mentorIds?.some((m: any) => m._id === user._id || m === user._id)).map(c => c._id);
+    setMentorClasses(assigned);
+    setAssigningMentor(user);
+  };
+
+  const handleSaveAssignedClasses = async () => {
+    setUpdatingClasses(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/users/${assigningMentor._id}/classes`, {
+        method: 'PATCH',
+        headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ classIds: mentorClasses })
+      });
+      if (!res.ok) throw new Error("Failed to assign classes");
+      
+      setSuccess("Classes assigned successfully!");
+      setAssigningMentor(null);
+      // Re-fetch classes to update local state so next click is fresh
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/class-categories`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      }).then(r => r.json()).then(data => { if (Array.isArray(data)) setClassCategories(data); });
+      
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err: any) {
+      setError(err.message);
+      setTimeout(() => setError(""), 5000);
+    } finally {
+      setUpdatingClasses(false);
+    }
+  };
+
   return (
     <div className="mentor-container" style={{ minHeight: '100vh' }}>
       <div className="orb orb-1"></div>
@@ -207,6 +251,12 @@ export default function UserDirectory() {
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <span className="badge" style={{ background: 'var(--bg-main)', padding: '0.5rem 1rem', borderRadius: '20px' }}>{user.role}</span>
                     
+                    {user.role === 'MENTOR' && currentUser?.role !== 'PARENT' && (
+                      <button onClick={(e) => { e.preventDefault(); handleStartAssigning(user); }} className="btn btn-primary btn-sm" style={{ padding: '0.4rem 1rem' }}>
+                        Assign Classes
+                      </button>
+                    )}
+
                     {currentUser?.role === 'SUPER_ADMIN' && (
                       <>
                         <select 
@@ -234,9 +284,37 @@ export default function UserDirectory() {
                     )}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+                
+                {assigningMentor?._id === user._id && (
+                  <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                    <h4 style={{ marginBottom: '1rem', color: 'var(--primary)' }}>Assign Classes to {user.name}</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.5rem', marginBottom: '1rem' }}>
+                      {classCategories.map(cls => (
+                        <label key={cls._id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={mentorClasses.includes(cls._id)}
+                            onChange={(e) => {
+                              if (e.target.checked) setMentorClasses([...mentorClasses, cls._id]);
+                              else setMentorClasses(mentorClasses.filter(id => id !== cls._id));
+                            }}
+                          />
+                          {cls.name}
+                        </label>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                      <button onClick={handleSaveAssignedClasses} className="btn btn-primary btn-sm" disabled={updatingClasses}>
+                        {updatingClasses ? "Saving..." : "Save Assignments"}
+                      </button>
+                      <button onClick={() => setAssigningMentor(null)} className="btn btn-outline btn-sm">Cancel</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
         </div>
       </div>
     </div>

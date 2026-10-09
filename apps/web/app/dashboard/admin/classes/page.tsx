@@ -135,6 +135,26 @@ export default function AdminClassesDashboard() {
     }
   };
 
+  const handleDeleteClass = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this class? Children in this class will become Unassigned.")) return;
+    setError("");
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/class-categories/${id}`, {
+        method: 'DELETE',
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Failed to delete class category");
+      
+      await fetchClasses(token as string);
+      setSuccess("Class category deleted successfully!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err: any) {
+      setError(err.message);
+      setTimeout(() => setError(""), 5000);
+    }
+  };
+
   if (loading) {
     return <div className="home-container"><div style={{padding: '3rem', color: 'white'}}>Loading Classes...</div></div>;
   }
@@ -237,7 +257,10 @@ export default function AdminClassesDashboard() {
                           </div>
                         )}
                       </div>
-                      <button onClick={() => startEditing(cls)} className="btn btn-outline btn-sm">Edit & Assign</button>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignSelf: 'flex-start' }}>
+                        <button onClick={() => startEditing(cls)} className="btn btn-outline btn-sm">Edit & Assign</button>
+                        <button onClick={() => handleDeleteClass(cls._id)} className="btn btn-outline btn-sm" style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}>Delete</button>
+                      </div>
                     </div>
                     {editingId === cls._id && (
                       <form onSubmit={(e) => handleUpdateClass(e, cls._id)} style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>

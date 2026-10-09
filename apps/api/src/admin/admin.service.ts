@@ -123,6 +123,17 @@ export class AdminService {
     );
   }
 
+  async deleteClassCategory(id: string, branchId: string, isSuperAdmin: boolean) {
+    const filter: any = { _id: id };
+    if (!isSuperAdmin) filter.branchId = branchId;
+    const deleted = await this.classCategoryModel.findOneAndDelete(filter);
+    if (deleted) {
+      // Unassign children from this class
+      await this.childModel.updateMany({ classCategoryId: id }, { $unset: { classCategoryId: "" } });
+    }
+    return { success: !!deleted };
+  }
+
   // User Management
   async transferUserBranch(userId: string, newBranchId: string) {
     const user = await this.userModel.findByIdAndUpdate(userId, { branchId: newBranchId }, { new: true });
@@ -140,5 +151,25 @@ export class AdminService {
 
   async updateUserRole(userId: string, role: string) {
     return this.userModel.findByIdAndUpdate(userId, { role }, { new: true });
+  }
+
+  async assignClassesToMentor(userId: string, classIds: string[], branchId: string, isSuperAdmin: boolean) {
+    const branchFilter = isSuperAdmin ? {} : { branchId };
+    
+    // First, remove mentor from all classes in the applicable scope
+    await this.classCategoryModel.updateMany(
+      { ...branchFilter, mentorIds: userId },
+      { $pull: { mentorIds: userId } }
+    );
+    
+    // Then, add mentor to the specified classes
+    if (classIds && classIds.length > 0) {
+      await this.classCategoryModel.updateMany(
+        { _id: { $in: classIds }, ...branchFilter },
+        { $addToSet: { mentorIds: userId } }
+      );
+    }
+    
+    return { success: true };
   }
 }

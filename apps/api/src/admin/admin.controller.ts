@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AdminService } from './admin.service.js';
 
@@ -102,6 +102,12 @@ export class AdminController {
     return this.adminService.updateClassCategory(id, body, req.user.branchId);
   }
 
+  @Delete('class-categories/:id')
+  async deleteClassCategory(@Param('id') id: string, @Req() req: any) {
+    this.checkAdmin(req);
+    return this.adminService.deleteClassCategory(id, req.user.branchId, req.user.role === 'SUPER_ADMIN');
+  }
+
   // User Management
   @Post('users/:id/transfer')
   async transferUser(@Param('id') userId: string, @Body() body: { branchId: string }, @Req() req: any) {
@@ -113,5 +119,11 @@ export class AdminController {
   async updateUserRole(@Param('id') userId: string, @Body() body: { role: string }, @Req() req: any) {
     this.checkSuperAdmin(req);
     return this.adminService.updateUserRole(userId, body.role);
+  }
+
+  @Patch('users/:id/classes')
+  async assignClassesToMentor(@Param('id') userId: string, @Body() body: { classIds: string[] }, @Req() req: any) {
+    this.checkAdmin(req);
+    return this.adminService.assignClassesToMentor(userId, body.classIds, req.user.branchId, req.user.role === 'SUPER_ADMIN');
   }
 }
