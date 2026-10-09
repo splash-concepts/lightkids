@@ -11,6 +11,11 @@ export default function UserDirectory() {
   const [filterRole, setFilterRole] = useState("PARENT");
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [branches, setBranches] = useState<any[]>([]);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newStaff, setNewStaff] = useState({ name: "", email: "", password: "", role: "MENTOR" });
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -52,6 +57,37 @@ export default function UserDirectory() {
       });
   };
 
+  const handleCreateStaff = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (creating) return;
+    setCreating(true);
+    setError("");
+    setSuccess("");
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...newStaff,
+          branchId: currentUser?.role === 'SUPER_ADMIN' ? branches[0]?._id : currentUser?.branchId
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to create staff member");
+      
+      setSuccess("Staff member created successfully!");
+      setNewStaff({ name: "", email: "", password: "", role: "MENTOR" });
+      setShowAddForm(false);
+      fetchUsers(filterRole);
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err: any) {
+      setError(err.message);
+      setTimeout(() => setError(""), 5000);
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const handleRoleChange = async (userId: string, newRole: string) => {
     const token = localStorage.getItem("token");
     try {
@@ -76,10 +112,12 @@ export default function UserDirectory() {
         body: JSON.stringify({ branchId: newBranchId })
       });
       if (!res.ok) throw new Error("Failed to transfer user");
-      alert("Successfully transferred user (and children if parent) to new branch.");
-      fetchUsers(filterRole); // Refresh list
+      setSuccess("Successfully transferred user to new branch.");
+      setTimeout(() => setSuccess(""), 3000);
+      fetchUsers(filterRole);
     } catch (err: any) {
-      alert(err.message);
+      setError(err.message);
+      setTimeout(() => setError(""), 5000);
     }
   };
 
@@ -95,12 +133,64 @@ export default function UserDirectory() {
 
       <div className="dashboard-content" style={{ marginTop: '2rem' }}>
         <div className="glass-panel" style={{ padding: '2rem' }}>
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-            <button className={`btn ${filterRole === 'PARENT' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setFilterRole('PARENT')}>Parents</button>
-            <button className={`btn ${filterRole === 'MENTOR' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setFilterRole('MENTOR')}>Teachers / Mentors</button>
-            <button className={`btn ${filterRole === 'MINISTER' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setFilterRole('MINISTER')}>Ministers</button>
-            <button className={`btn ${filterRole === 'ADMIN' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setFilterRole('ADMIN')}>Administrators</button>
+          
+          {error && (
+            <div className="animate-fade-in" style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, background: 'var(--danger)', color: 'white', padding: '1rem 1.5rem', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+              <strong>Oops! Failed: </strong> {error}
+            </div>
+          )}
+          
+          {success && (
+            <div className="animate-fade-in" style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, background: 'var(--secondary)', color: 'white', padding: '1rem 1.5rem', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+              <strong>Success! </strong> {success}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <button className={`btn ${filterRole === 'PARENT' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setFilterRole('PARENT')}>Parents</button>
+              <button className={`btn ${filterRole === 'MENTOR' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setFilterRole('MENTOR')}>Teachers / Mentors</button>
+              <button className={`btn ${filterRole === 'MINISTER' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setFilterRole('MINISTER')}>Ministers</button>
+              <button className={`btn ${filterRole === 'ADMIN' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setFilterRole('ADMIN')}>Administrators</button>
+            </div>
+            
+            <button className="btn btn-secondary" onClick={() => setShowAddForm(!showAddForm)}>
+              {showAddForm ? "Cancel" : "+ Add Staff Member"}
+            </button>
           </div>
+
+          {showAddForm && (
+            <div className="glass-panel animate-fade-in" style={{ padding: '2rem', marginBottom: '2rem', border: '1px solid var(--primary-light)' }}>
+              <h3 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>Create New Staff Member</h3>
+              <form onSubmit={handleCreateStaff} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                <div className="input-group">
+                  <label>Full Name</label>
+                  <input type="text" required value={newStaff.name} onChange={e => setNewStaff({...newStaff, name: e.target.value})} placeholder="e.g. John Doe" />
+                </div>
+                <div className="input-group">
+                  <label>Email</label>
+                  <input type="email" required value={newStaff.email} onChange={e => setNewStaff({...newStaff, email: e.target.value})} placeholder="john@example.com" />
+                </div>
+                <div className="input-group">
+                  <label>Temporary Password</label>
+                  <input type="text" required value={newStaff.password} onChange={e => setNewStaff({...newStaff, password: e.target.value})} placeholder="SecretPassword123" />
+                </div>
+                <div className="input-group">
+                  <label>Assign Role</label>
+                  <select value={newStaff.role} onChange={e => setNewStaff({...newStaff, role: e.target.value})}>
+                    <option value="MENTOR">Mentor / Teacher</option>
+                    <option value="MINISTER">Minister</option>
+                    <option value="ADMIN">Administrator</option>
+                  </select>
+                </div>
+                <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
+                  <button type="submit" className="btn btn-primary w-full" disabled={creating}>
+                    {creating ? "Creating Account..." : "Create Account"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
 
           {loading ? <p>Loading users...</p> : (
             <div className="users-list" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

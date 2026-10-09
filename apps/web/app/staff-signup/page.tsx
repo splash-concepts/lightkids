@@ -13,10 +13,6 @@ export default function StaffSignup() {
     role: "MENTOR",
     branchId: "",
   });
-  
-  const [passcode, setPasscode] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
   const [branches, setBranches] = useState<any[]>([]);
   const [loadingBranches, setLoadingBranches] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -28,8 +24,6 @@ export default function StaffSignup() {
   };
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-    
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/auth/branches`)
       .then(res => res.json())
       .then(data => {
@@ -48,17 +42,8 @@ export default function StaffSignup() {
         setBranches([]);
         setLoadingBranches(false);
       });
-  }, [isAuthenticated]);
+  }, []);
 
-  const handleAuth = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passcode === "LIGHTKIDS_STAFF_2026") {
-      setIsAuthenticated(true);
-      setError("");
-    } else {
-      setError("Invalid staff passcode");
-    }
-  };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,34 +75,7 @@ export default function StaffSignup() {
     }
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="signup-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <div className="signup-card glass-panel" style={{ maxWidth: '400px', width: '100%', padding: '2rem' }}>
-          <h2 style={{ marginBottom: '1rem', color: 'var(--text-main)' }}>Staff Portal Access</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Enter the staff registration code to continue.</p>
-          
-          {error && <div className="error-alert">{error}</div>}
-          
-          <form onSubmit={handleAuth}>
-            <div className="input-group">
-              <input 
-                type="password" 
-                placeholder="Passcode" 
-                value={passcode} 
-                onChange={(e) => setPasscode(e.target.value)} 
-                required 
-              />
-            </div>
-            <button type="submit" className="btn btn-primary w-full">Verify Code</button>
-          </form>
-          <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-            <Link href="/" className="login-link">← Return to Home</Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="signup-container">
