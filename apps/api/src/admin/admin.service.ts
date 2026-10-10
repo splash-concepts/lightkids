@@ -7,6 +7,7 @@ import { Attendance, AttendanceDocument, AttendanceStatus } from '../schemas/att
 import { AcademicMaterial, AcademicMaterialDocument } from '../schemas/academic-material.schema.js';
 import { Branch, BranchDocument } from '../schemas/branch.schema.js';
 import { ClassCategory, ClassCategoryDocument } from '../schemas/class-category.schema.js';
+import { Archive, ArchiveDocument } from '../schemas/archive.schema.js';
 
 @Injectable()
 export class AdminService {
@@ -16,7 +17,8 @@ export class AdminService {
     @InjectModel(Attendance.name) private attendanceModel: Model<AttendanceDocument>,
     @InjectModel(AcademicMaterial.name) private materialModel: Model<AcademicMaterialDocument>,
     @InjectModel(Branch.name) private branchModel: Model<BranchDocument>,
-    @InjectModel(ClassCategory.name) private classCategoryModel: Model<ClassCategoryDocument>
+    @InjectModel(ClassCategory.name) private classCategoryModel: Model<ClassCategoryDocument>,
+    @InjectModel(Archive.name) private archiveModel: Model<ArchiveDocument>
   ) {}
 
   async getStats(branchId?: string) {
@@ -144,8 +146,33 @@ export class AdminService {
     
     if (user.role === UserRole.PARENT) {
       children = await this.childModel.find({ parentIds: user._id }).populate('classCategoryId');
+      if (user.branchId) {
+        children = children.map((child: any) => {
+          const obj = child.toObject();
+          const classCategory = obj.classCategoryId as any;
+          if (classCategory && classCategory.branchAliases) {
+            const alias = classCategory.branchAliases.find((a: any) => a.branchId?.toString() === user.branchId?.toString());
+            if (alias && alias.name) {
+              classCategory.name = alias.name;
+            }
+          }
+          return obj as any;
+        });
+      }
     } else if (user.role === UserRole.MENTOR) {
       classes = await this.classCategoryModel.find({ mentorIds: user._id });
+      if (user.branchId) {
+        classes = classes.map(cls => {
+          const obj = cls.toObject();
+          if (obj.branchAliases && obj.branchAliases.length > 0) {
+            const alias = obj.branchAliases.find((a: any) => a.branchId?.toString() === user.branchId?.toString());
+            if (alias && alias.name) {
+              obj.name = alias.name;
+            }
+          }
+          return obj as any;
+        });
+      }
     }
     
     return { user, children, classes };
@@ -155,18 +182,56 @@ export class AdminService {
     const filter = branchId ? { branchId } : {};
     
     const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
+    let [data, total] = await Promise.all([
       this.childModel.find(filter).populate('classCategoryId').populate('parentIds', 'name email phoneNumber whatsappNumber').sort({ createdAt: -1 }).skip(skip).limit(limit),
       this.childModel.countDocuments(filter)
     ]);
     
+    if (branchId) {
+      data = data.map((child: any) => {
+        const obj = child.toObject();
+        if (obj.classCategoryId && obj.classCategoryId.branchAliases) {
+          const alias = obj.classCategoryId.branchAliases.find((a: any) => a.branchId?.toString() === branchId);
+          if (alias && alias.name) {
+            obj.classCategoryId.name = alias.name;
+          }
+        }
+        return obj as any;
+      });
+    }
+
     return { data, total, page, totalPages: Math.ceil(total / limit) };
   }
 
   async getChild(id: string) {
     const child = await this.childModel.findById(id).populate('classCategoryId').populate('parentIds', 'name email phoneNumber whatsappNumber');
     const attendance = await this.attendanceModel.find({ childId: id }).sort({ date: -1 });
-    return { child, attendance };
+
+    let childObj: any = child ? child.toObject() : null;
+    if (childObj && childObj.classCategoryId && childObj.classCategoryId.branchAliases && childObj.branchId) {
+      const alias = childObj.classCategoryId.branchAliases.find((a: any) => a.branchId?.toString() === childObj.branchId.toString());
+      if (alias && alias.name) {
+        childObj.classCategoryId.name = alias.name;
+      }
+    }
+
+    return { child: childObj, attendance };
+  }
+
+  async deleteChild(id: string, actorId: string) {
+    const child = await this.childModel.findById(id);
+    if (!child) throw new NotFoundException('Child not found');
+    
+    // Archive
+    await this.archiveModel.create({
+      entityType: 'Child',
+      originalId: child._id.toString(),
+      data: child.toObject(),
+      archivedBy: actorId
+    });
+
+    await this.childModel.findByIdAndDelete(id);
+    return { success: true };
   }
 
   async getAttendanceHistory(branchId?: string, page: number = 1, limit: number = 100) {
@@ -201,6 +266,22 @@ export class AdminService {
     return this.branchModel.find().sort({ createdAt: -1 });
   }
 
+  async deleteBranch(id: string, actorId: string) {
+    const branch = await this.branchModel.findById(id);
+    if (!branch) return { success: false };
+
+    // Archive
+    await this.archiveModel.create({
+      entityType: 'Branch',
+      originalId: branch._id.toString(),
+      data: branch.toObject(),
+      archivedBy: actorId
+    });
+
+    await this.branchModel.findByIdAndDelete(id);
+    return { success: true };
+  }
+
   // Class Management per Branch
   async createClassCategory(data: { name: string; description?: string; branchId: string; ageMin?: number; ageMax?: number }) {
     return this.classCategoryModel.create(data);
@@ -208,23 +289,79 @@ export class AdminService {
 
   async getClassCategories(branchId?: string) {
     const filter = branchId ? { $or: [{ branchId: new Types.ObjectId(branchId) }, { branchId: { $exists: false } }, { branchId: null }] } : {};
-    return this.classCategoryModel.find(filter).populate('mentorIds', 'name email').sort({ name: 1 });
+    const classes = await this.classCategoryModel.find(filter).populate({
+      path: 'mentorIds',
+      select: 'name email role branchId',
+      match: branchId ? { branchId: new Types.ObjectId(branchId) } : {}
+    }).sort({ name: 1 });
+
+    if (branchId) {
+      return classes.map(cls => {
+        const obj = cls.toObject();
+        if (obj.branchAliases && obj.branchAliases.length > 0) {
+          const alias = obj.branchAliases.find((a: any) => a.branchId?.toString() === branchId);
+          if (alias && alias.name) {
+            obj.name = alias.name;
+          }
+        }
+        // Filter out nulls from mentorIds array (due to populate match filtering out other branch mentors)
+        if (obj.mentorIds) {
+          obj.mentorIds = obj.mentorIds.filter((m: any) => m != null);
+        }
+        return obj;
+      });
+    }
+
+    return classes;
   }
 
   async updateClassCategory(id: string, data: { name?: string; description?: string; mentorIds?: string[]; ageMin?: number; ageMax?: number }, branchId?: string) {
-    const filter: any = { _id: id };
-    if (branchId) filter.branchId = branchId;
+    const category = await this.classCategoryModel.findById(id);
+    if (!category) return null;
 
+    if (branchId && (!category.branchId || category.branchId.toString() !== branchId)) {
+      // Admin modifying a Global Class -> Setup an Alias
+      if (data.name) {
+        let aliases: any[] = category.branchAliases || [];
+        const existingIdx = aliases.findIndex((a: any) => a.branchId?.toString() === branchId);
+        if (existingIdx >= 0) {
+          aliases[existingIdx].name = data.name;
+        } else {
+          aliases.push({ branchId: new Types.ObjectId(branchId), name: data.name });
+        }
+        
+        return this.classCategoryModel.findByIdAndUpdate(
+          id,
+          { $set: { branchAliases: aliases } },
+          { new: true }
+        );
+      }
+      return category; // If not changing name, nothing else an admin can change on a global class
+    }
+
+    // Normal update (Super Admin, or branch Admin updating their own local class)
     return this.classCategoryModel.findOneAndUpdate(
-      filter,
+      { _id: id },
       { $set: data },
       { new: true }
     );
   }
 
-  async deleteClassCategory(id: string, branchId: string, isSuperAdmin: boolean) {
+  async deleteClassCategory(id: string, branchId: string, isSuperAdmin: boolean, actorId: string) {
     const filter: any = { _id: id };
     if (!isSuperAdmin) filter.branchId = branchId;
+    
+    const category = await this.classCategoryModel.findOne(filter);
+    if (!category) return { success: false };
+
+    // Archive
+    await this.archiveModel.create({
+      entityType: 'ClassCategory',
+      originalId: category._id.toString(),
+      data: category.toObject(),
+      archivedBy: actorId
+    });
+
     const deleted = await this.classCategoryModel.findOneAndDelete(filter);
     if (deleted) {
       // Unassign children from this class
@@ -274,8 +411,34 @@ export class AdminService {
     return user.save();
   }
 
+  async deleteUser(userId: string, actorId: string, actorRole: string) {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    if (actorRole === 'ADMIN' && (user.role === 'SUPER_ADMIN' || user.role === 'MINISTER')) {
+      throw new UnauthorizedException('Admin cannot delete SUPER_ADMIN or MINISTER accounts');
+    }
+
+    if (userId === actorId) {
+      throw new UnauthorizedException('You cannot delete your own account');
+    }
+
+    // Archive
+    await this.archiveModel.create({
+      entityType: 'User',
+      originalId: user._id.toString(),
+      data: user.toObject(),
+      archivedBy: actorId
+    });
+
+    await this.userModel.findByIdAndDelete(userId);
+    return { success: true };
+  }
+
   async assignClassesToMentor(userId: string, classIds: string[], branchId: string, isSuperAdmin: boolean) {
-    const branchFilter = isSuperAdmin ? {} : { branchId };
+    const branchFilter = isSuperAdmin ? {} : { 
+      $or: [{ branchId: new Types.ObjectId(branchId) }, { branchId: { $exists: false } }, { branchId: null }] 
+    };
     
     // First, remove mentor from all classes in the applicable scope
     await this.classCategoryModel.updateMany(

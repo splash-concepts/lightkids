@@ -8,6 +8,7 @@ import { Attendance, AttendanceSchema } from '../schemas/attendance.schema.js';
 import { AcademicMaterial, AcademicMaterialSchema } from '../schemas/academic-material.schema.js';
 import { Branch, BranchSchema } from '../schemas/branch.schema.js';
 import { ClassCategory, ClassCategorySchema } from '../schemas/class-category.schema.js';
+import { Archive, ArchiveSchema } from '../schemas/archive.schema.js';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { ClassCategory, ClassCategorySchema } from '../schemas/class-category.sc
       { name: Attendance.name, schema: AttendanceSchema },
       { name: AcademicMaterial.name, schema: AcademicMaterialSchema },
       { name: Branch.name, schema: BranchSchema },
-      { name: ClassCategory.name, schema: ClassCategorySchema }
+      { name: ClassCategory.name, schema: ClassCategorySchema },
+      { name: Archive.name, schema: ArchiveSchema }
     ])
   ],
   controllers: [AdminController],

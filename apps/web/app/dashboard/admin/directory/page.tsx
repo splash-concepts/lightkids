@@ -187,6 +187,34 @@ export default function UserDirectory() {
     }
   };
 
+  const performDeleteUser = async (userId: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Failed to delete user");
+      }
+      
+      setActionResult({ isOpen: true, type: 'success', title: "User Deleted & Archived", message: "User deleted and moved to archive successfully!" });
+      fetchUsers(filterRole, page);
+    } catch (err: any) {
+      setActionResult({ isOpen: true, type: 'error', title: "Delete Failed", message: err.message });
+    }
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    setConfirmAction({
+      isOpen: true,
+      title: "Delete User?",
+      message: "Are you sure you want to delete this user? Their record will be moved to the Archives.",
+      onConfirm: () => performDeleteUser(userId)
+    });
+  };
+
   return (
     <div className="mentor-container" style={{ minHeight: '100vh' }}>
       <div className="orb orb-1"></div>
@@ -372,6 +400,14 @@ export default function UserDirectory() {
                             <option key={b._id} value={b._id}>{b.name}</option>
                           ))}
                         </select>
+                        
+                        <button 
+                          onClick={() => handleDeleteUser(user._id)} 
+                          className="btn btn-outline btn-sm" 
+                          style={{ padding: '0.4rem', borderColor: 'var(--danger)', color: 'var(--danger)' }}
+                        >
+                          Archive
+                        </button>
                       </>
                     ) : null}
                   </div>

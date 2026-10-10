@@ -22,6 +22,9 @@ export class ClassCategory {
 
   @Prop({ type: Types.ObjectId, ref: 'Branch' })
   branchId?: Types.ObjectId;
+
+  @Prop({ type: [{ branchId: { type: Types.ObjectId, ref: 'Branch' }, name: String }] })
+  branchAliases?: { branchId: Types.ObjectId, name: string }[];
 }
 
 export const ClassCategorySchema = SchemaFactory.createForClass(ClassCategory);

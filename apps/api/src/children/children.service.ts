@@ -20,7 +20,22 @@ export class ChildrenService {
     if (mentorId) {
       filter.mentorIds = new Types.ObjectId(mentorId);
     }
-    return this.classCategoryModel.find(filter).sort({ name: 1 });
+    const classes = await this.classCategoryModel.find(filter).sort({ name: 1 });
+
+    if (branchId) {
+      return classes.map(cls => {
+        const obj = cls.toObject();
+        if (obj.branchAliases && obj.branchAliases.length > 0) {
+          const alias = obj.branchAliases.find((a: any) => a.branchId?.toString() === branchId);
+          if (alias && alias.name) {
+            obj.name = alias.name;
+          }
+        }
+        return obj;
+      });
+    }
+
+    return classes;
   }
 
   async registerChild(data: any, userId: string, role: string, branchId: string) {
@@ -35,7 +50,9 @@ export class ChildrenService {
     if (data.dob && !data.classCategoryId) {
       const today = new Date();
       const ageInYears = (today.getTime() - new Date(data.dob).getTime()) / (1000 * 3600 * 24 * 365.25);
-      const categories = await this.classCategoryModel.find({ branchId });
+      const categories = await this.classCategoryModel.find({ 
+        $or: [{ branchId: branchId ? new Types.ObjectId(branchId) : null }, { branchId: { $exists: false } }, { branchId: null }] 
+      });
       const matchedCategory = categories.find(c => ageInYears >= (c.ageMin || 0) && ageInYears < (c.ageMax ? c.ageMax + 1 : 999));
       if (matchedCategory) {
         data.classCategoryId = matchedCategory._id;
@@ -113,9 +130,23 @@ export class ChildrenService {
     if (child.classCategoryId) {
       materials = await this.materialModel.find({ classCategoryId: child.classCategoryId._id }).sort({ createdAt: -1 });
     }
-    const classes = await this.classCategoryModel.find({ 
+    let classes = await this.classCategoryModel.find({ 
       $or: [{ branchId: child.branchId }, { branchId: { $exists: false } }, { branchId: null }] 
     });
+    
+    // Apply aliases
+    if (child.branchId) {
+      classes = classes.map(cls => {
+        const obj = cls.toObject();
+        if (obj.branchAliases && obj.branchAliases.length > 0) {
+          const alias = obj.branchAliases.find((a: any) => a.branchId?.toString() === child.branchId.toString());
+          if (alias && alias.name) {
+            obj.name = alias.name;
+          }
+        }
+        return obj as any;
+      });
+    }
 
     return { child, attendance, materials, classes };
   }
@@ -132,7 +163,9 @@ export class ChildrenService {
     if (data.dob && !data.classCategoryId) {
       const today = new Date();
       const ageInYears = (today.getTime() - new Date(data.dob).getTime()) / (1000 * 3600 * 24 * 365.25);
-      const categories = await this.classCategoryModel.find({ branchId: child.branchId });
+      const categories = await this.classCategoryModel.find({ 
+        $or: [{ branchId: child.branchId }, { branchId: { $exists: false } }, { branchId: null }] 
+      });
       const matchedCategory = categories.find(c => ageInYears >= (c.ageMin || 0) && ageInYears < (c.ageMax ? c.ageMax + 1 : 999));
       if (matchedCategory) {
         data.classCategoryId = matchedCategory._id;

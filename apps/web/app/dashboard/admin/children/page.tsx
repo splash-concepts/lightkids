@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Modal from "../../../../components/Modal";
 import "../../../page.css";
 import "../../mentor/mentor.css";
 
@@ -10,8 +11,10 @@ export default function ChildrenDirectory() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [actionResult, setActionResult] = useState<{isOpen: boolean; type: 'success' | 'error'; title: string; message: string} | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void} | null>(null);
 
-  useEffect(() => {
+  const fetchChildren = () => {
     const token = localStorage.getItem("token");
     setLoading(true);
     fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/children?page=${page}&limit=50`, {
@@ -32,14 +35,74 @@ export default function ChildrenDirectory() {
       })
       .catch(err => {
         console.error(err);
-        setChildren([]);
-        setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchChildren();
   }, [page]);
+
+  const performDeleteChild = async (childId: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/children/${childId}`, {
+        method: 'DELETE',
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Failed to delete child");
+      }
+      
+      setActionResult({ isOpen: true, type: 'success', title: "Child Archived", message: "Child deleted and moved to archive successfully!" });
+      fetchChildren();
+    } catch (err: any) {
+      setActionResult({ isOpen: true, type: 'error', title: "Delete Failed", message: err.message });
+    }
+  };
+
+  const handleDeleteChild = (childId: string) => {
+    setConfirmAction({
+      isOpen: true,
+      title: "Archive Child?",
+      message: "Are you sure you want to delete this child? Their record and attendance history will be moved to the Archives.",
+      onConfirm: () => performDeleteChild(childId)
+    });
+  };
 
   return (
     <div className="mentor-container" style={{ minHeight: '100vh' }}>
       <div className="orb orb-1"></div>
+
+      {/* Action Modals */}
+      {actionResult && (
+        <Modal 
+          isOpen={actionResult.isOpen} 
+          type={actionResult.type} 
+          title={actionResult.title} 
+          onConfirm={() => setActionResult(null)}
+          onClose={() => setActionResult(null)}
+        >
+          <p>{actionResult.message}</p>
+        </Modal>
+      )}
+
+      {confirmAction && (
+        <Modal 
+          isOpen={confirmAction.isOpen} 
+          type="confirm" 
+          title={confirmAction.title} 
+          onConfirm={() => {
+            confirmAction.onConfirm();
+            setConfirmAction(null);
+          }}
+          onClose={() => setConfirmAction(null)}
+          confirmText="Yes, Archive"
+        >
+          <p>{confirmAction.message}</p>
+        </Modal>
+      )}
+
       <header className="header glass-panel animate-fade-in">
         <div className="logo-section">
           <Link href="/dashboard/admin" className="btn btn-outline btn-sm">← Back</Link>
@@ -67,8 +130,15 @@ export default function ChildrenDirectory() {
                   <p style={{ margin: '0.5rem 0', fontSize: '0.9rem' }}>
                     Parents: {child.parentIds?.map((p: any) => p.name).join(', ') || 'N/A'}
                   </p>
-                  <div style={{ marginTop: '1.5rem' }}>
-                    <Link href={`/children/${child._id}`} className="btn btn-secondary btn-sm">View Full Profile</Link>
+                  <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.5rem' }}>
+                    <Link href={`/children/${child._id}`} className="btn btn-secondary btn-sm" style={{ flex: 1, textAlign: 'center' }}>Full Profile</Link>
+                    <button 
+                      onClick={() => handleDeleteChild(child._id)} 
+                      className="btn btn-outline btn-sm" 
+                      style={{ padding: '0.4rem', borderColor: 'var(--danger)', color: 'var(--danger)' }}
+                    >
+                      Archive
+                    </button>
                   </div>
                 </div>
               ))}

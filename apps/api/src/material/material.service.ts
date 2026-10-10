@@ -48,10 +48,24 @@ export class MaterialService {
     }
 
     const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-      this.materialModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).populate('authorId', 'name').populate('classCategoryId', 'name'),
+    let [data, total] = await Promise.all([
+      this.materialModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).populate('authorId', 'name').populate('classCategoryId'),
       this.materialModel.countDocuments(filter)
     ]);
+    
+    if (user.branchId) {
+      data = data.map((mat: any) => {
+        const obj = mat.toObject();
+        if (obj.classCategoryId && obj.classCategoryId.branchAliases) {
+          const alias = obj.classCategoryId.branchAliases.find((a: any) => a.branchId?.toString() === user.branchId.toString());
+          if (alias && alias.name) {
+            obj.classCategoryId.name = alias.name;
+          }
+        }
+        return obj as any;
+      });
+    }
+
     return { data, total, page, totalPages: Math.ceil(total / limit) };
   }
 }
