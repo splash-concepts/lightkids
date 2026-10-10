@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Modal from "../../../../components/Modal";
 import "../../../page.css";
 import "../../mentor/mentor.css";
 
@@ -22,6 +23,8 @@ export default function UserDirectory() {
   const [assigningMentor, setAssigningMentor] = useState<any>(null);
   const [mentorClasses, setMentorClasses] = useState<string[]>([]);
   const [updatingClasses, setUpdatingClasses] = useState(false);
+  const [actionResult, setActionResult] = useState<{isOpen: boolean; type: 'success' | 'error'; title: string; message: string} | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void} | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -93,14 +96,12 @@ export default function UserDirectory() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to create staff member");
       
-      setSuccess("Staff member created successfully!");
       setNewStaff({ name: "", email: "", password: "", role: "MENTOR" });
       setShowAddForm(false);
       fetchUsers(filterRole, page);
-      setTimeout(() => setSuccess(""), 3000);
+      setActionResult({ isOpen: true, type: 'success', title: "Staff Created", message: "Staff member created successfully!" });
     } catch (err: any) {
-      setError(err.message);
-      setTimeout(() => setError(""), 5000);
+      setActionResult({ isOpen: true, type: 'error', title: "Failed to Create Staff", message: err.message });
     } finally {
       setCreating(false);
     }
@@ -115,9 +116,10 @@ export default function UserDirectory() {
         body: JSON.stringify({ role: newRole })
       });
       if (!res.ok) throw new Error("Failed to change role");
+      setActionResult({ isOpen: true, type: 'success', title: "Role Changed", message: "Successfully updated user role." });
       fetchUsers(filterRole); // Refresh list
     } catch (err: any) {
-      alert(err.message);
+      setActionResult({ isOpen: true, type: 'error', title: "Role Change Failed", message: err.message });
     }
   };
 
@@ -130,12 +132,10 @@ export default function UserDirectory() {
         body: JSON.stringify({ branchId: newBranchId })
       });
       if (!res.ok) throw new Error("Failed to transfer user");
-      setSuccess("Successfully transferred user to new branch.");
-      setTimeout(() => setSuccess(""), 3000);
+      setActionResult({ isOpen: true, type: 'success', title: "Transferred", message: "Successfully transferred user to new branch." });
       fetchUsers(filterRole);
     } catch (err: any) {
-      setError(err.message);
-      setTimeout(() => setError(""), 5000);
+      setActionResult({ isOpen: true, type: 'error', title: "Transfer Failed", message: err.message });
     }
   };
 
@@ -157,25 +157,69 @@ export default function UserDirectory() {
       });
       if (!res.ok) throw new Error("Failed to assign classes");
       
-      setSuccess("Classes assigned successfully!");
+      setActionResult({ isOpen: true, type: 'success', title: "Classes Assigned", message: "Classes assigned successfully!" });
       setAssigningMentor(null);
       // Re-fetch classes to update local state so next click is fresh
       fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/class-categories`, {
         headers: { "Authorization": `Bearer ${token}` }
       }).then(r => r.json()).then(data => { if (Array.isArray(data)) setClassCategories(data); });
       
-      setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
-      setError(err.message);
-      setTimeout(() => setError(""), 5000);
+      setActionResult({ isOpen: true, type: 'error', title: "Failed to Assign", message: err.message });
     } finally {
       setUpdatingClasses(false);
+    }
+  };
+
+  const handleApproveUser = async (userId: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/users/${userId}/approve`, {
+        method: 'PATCH',
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Failed to approve user");
+      
+      setActionResult({ isOpen: true, type: 'success', title: "User Approved", message: "User approved successfully!" });
+      fetchUsers(filterRole, page);
+    } catch (err: any) {
+      setActionResult({ isOpen: true, type: 'error', title: "Approval Failed", message: err.message });
     }
   };
 
   return (
     <div className="mentor-container" style={{ minHeight: '100vh' }}>
       <div className="orb orb-1"></div>
+      
+      {/* Action Modals */}
+      {actionResult && (
+        <Modal 
+          isOpen={actionResult.isOpen} 
+          type={actionResult.type} 
+          title={actionResult.title} 
+          onConfirm={() => setActionResult(null)}
+          onClose={() => setActionResult(null)}
+        >
+          <p>{actionResult.message}</p>
+        </Modal>
+      )}
+
+      {confirmAction && (
+        <Modal 
+          isOpen={confirmAction.isOpen} 
+          type="confirm" 
+          title={confirmAction.title} 
+          onConfirm={() => {
+            confirmAction.onConfirm();
+            setConfirmAction(null);
+          }}
+          onClose={() => setConfirmAction(null)}
+          confirmText="Yes, Proceed"
+        >
+          <p>{confirmAction.message}</p>
+        </Modal>
+      )}
+
       <header className="header glass-panel animate-fade-in">
         <div className="logo-section">
           <Link href="/dashboard/admin" className="btn btn-outline btn-sm">← Back</Link>
@@ -186,18 +230,6 @@ export default function UserDirectory() {
       <div className="dashboard-content" style={{ marginTop: '2rem' }}>
         <div className="glass-panel" style={{ padding: '2rem' }}>
           
-          {error && (
-            <div className="animate-fade-in" style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, background: 'var(--danger)', color: 'white', padding: '1rem 1.5rem', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-              <strong>Oops! Failed: </strong> {error}
-            </div>
-          )}
-          
-          {success && (
-            <div className="animate-fade-in" style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, background: 'var(--secondary)', color: 'white', padding: '1rem 1.5rem', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-              <strong>Success! </strong> {success}
-            </div>
-          )}
-
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
               <button className={`btn ${filterRole === 'PARENT' ? 'btn-primary' : 'btn-outline'}`} onClick={() => { setFilterRole('PARENT'); setPage(1); }}>Parents</button>
@@ -206,43 +238,42 @@ export default function UserDirectory() {
               <button className={`btn ${filterRole === 'ADMIN' ? 'btn-primary' : 'btn-outline'}`} onClick={() => { setFilterRole('ADMIN'); setPage(1); }}>Administrators</button>
             </div>
             
-            <button className="btn btn-secondary" onClick={() => setShowAddForm(!showAddForm)}>
-              {showAddForm ? "Cancel" : "+ Add Staff Member"}
+            <button className="btn btn-secondary" onClick={() => setShowAddForm(true)}>
+              + Add Staff Member
             </button>
           </div>
 
-          {showAddForm && (
-            <div className="glass-panel animate-fade-in" style={{ padding: '2rem', marginBottom: '2rem', border: '1px solid var(--primary-light)' }}>
-              <h3 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>Create New Staff Member</h3>
-              <form onSubmit={handleCreateStaff} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                <div className="input-group">
-                  <label>Full Name</label>
-                  <input type="text" required value={newStaff.name} onChange={e => setNewStaff({...newStaff, name: e.target.value})} placeholder="e.g. John Doe" />
-                </div>
-                <div className="input-group">
-                  <label>Email</label>
-                  <input type="email" required value={newStaff.email} onChange={e => setNewStaff({...newStaff, email: e.target.value})} placeholder="john@example.com" />
-                </div>
-                <div className="input-group">
-                  <label>Temporary Password</label>
-                  <input type="text" required value={newStaff.password} onChange={e => setNewStaff({...newStaff, password: e.target.value})} placeholder="SecretPassword123" />
-                </div>
-                <div className="input-group">
-                  <label>Assign Role</label>
-                  <select value={newStaff.role} onChange={e => setNewStaff({...newStaff, role: e.target.value})}>
-                    <option value="MENTOR">Mentor / Teacher</option>
-                    <option value="MINISTER">Minister</option>
-                    <option value="ADMIN">Administrator</option>
-                  </select>
-                </div>
-                <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
-                  <button type="submit" className="btn btn-primary w-full" disabled={creating}>
-                    {creating ? "Creating Account..." : "Create Account"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
+          <Modal 
+            isOpen={showAddForm} 
+            title="Create New Staff Member" 
+            onClose={() => setShowAddForm(false)}
+          >
+            <form onSubmit={handleCreateStaff} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', textAlign: 'left' }}>
+              <div className="input-group">
+                <label>Full Name</label>
+                <input type="text" required value={newStaff.name} onChange={e => setNewStaff({...newStaff, name: e.target.value})} placeholder="e.g. John Doe" />
+              </div>
+              <div className="input-group">
+                <label>Email</label>
+                <input type="email" required value={newStaff.email} onChange={e => setNewStaff({...newStaff, email: e.target.value})} placeholder="john@example.com" />
+              </div>
+              <div className="input-group">
+                <label>Temporary Password</label>
+                <input type="text" required value={newStaff.password} onChange={e => setNewStaff({...newStaff, password: e.target.value})} placeholder="SecretPassword123" />
+              </div>
+              <div className="input-group">
+                <label>Assign Role</label>
+                <select value={newStaff.role} onChange={e => setNewStaff({...newStaff, role: e.target.value})}>
+                  <option value="MENTOR">Mentor / Teacher</option>
+                  <option value="MINISTER">Minister</option>
+                  <option value="ADMIN">Administrator</option>
+                </select>
+              </div>
+              <button type="submit" className="btn btn-primary w-full" disabled={creating} style={{ marginTop: '1rem' }}>
+                {creating ? "Creating Account..." : "Create Account"}
+              </button>
+            </form>
+          </Modal>
 
           {loading ? <p>Loading users...</p> : (
             <div className="users-list" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -257,6 +288,11 @@ export default function UserDirectory() {
                     </div>
                   </Link>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    {!user.isApproved && (
+                      <button onClick={(e) => { e.preventDefault(); handleApproveUser(user._id); }} className="btn btn-outline btn-sm" style={{ padding: '0.4rem 1rem', borderColor: 'var(--success)', color: 'var(--success)' }}>
+                        Approve Account
+                      </button>
+                    )}
                     <span className="badge" style={{ background: 'var(--bg-main)', padding: '0.5rem 1rem', borderRadius: '20px' }}>{user.role}</span>
                     
                     {user.role === 'MENTOR' && currentUser?.role !== 'PARENT' && (
@@ -273,10 +309,14 @@ export default function UserDirectory() {
                               type="checkbox" 
                               id={`mentor-${user._id}`} 
                               onChange={(e) => {
-                                if(e.target.checked && confirm('Are you sure you want to promote this parent to a Mentor? They will be managed from the Mentors section.')) {
-                                  handleRoleChange(user._id, 'MENTOR');
-                                } else {
-                                  e.target.checked = false;
+                                if (e.target.checked) {
+                                  e.target.checked = false; // Reset visually until confirmed
+                                  setConfirmAction({
+                                    isOpen: true,
+                                    title: "Promote to Mentor?",
+                                    message: "Are you sure you want to promote this parent to a Mentor? They will be managed from the Mentors section.",
+                                    onConfirm: () => handleRoleChange(user._id, 'MENTOR')
+                                  });
                                 }
                               }} 
                             />
@@ -286,7 +326,15 @@ export default function UserDirectory() {
                           <>
                             <select 
                               value={user.role} 
-                              onChange={(e) => handleRoleChange(user._id, e.target.value)}
+                              onChange={(e) => {
+                                const newRole = e.target.value;
+                                setConfirmAction({
+                                  isOpen: true,
+                                  title: "Change Role?",
+                                  message: `Are you sure you want to change this user's role to ${newRole}?`,
+                                  onConfirm: () => handleRoleChange(user._id, newRole)
+                                });
+                              }}
                               style={{ padding: '0.4rem', borderRadius: '4px', background: 'var(--bg-main)', color: 'white', border: '1px solid var(--border-color)' }}
                             >
                               <option value="PARENT">PARENT</option>

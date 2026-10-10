@@ -159,7 +159,15 @@ export default function AdminDashboard() {
         )}
 
         {loading ? (
-          <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>Loading dashboard data...</div>
+          <div className="animate-pulse" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+              {[1, 2, 3, 4, 5, 6].map(i => <div key={i} style={{ height: '40px', width: '120px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}></div>)}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+              {[1, 2, 3, 4].map(i => <div key={i} style={{ height: '100px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}></div>)}
+            </div>
+            <div style={{ height: '300px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}></div>
+          </div>
         ) : (
           <section className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
             
@@ -179,30 +187,30 @@ export default function AdminDashboard() {
             {activeTab === 'overview' && (
               <>
                 <div className="stats-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-                  <div className="stat-card glass-panel">
+                  <Link href="/dashboard/admin/children" className="stat-card glass-panel hover-lift" style={{ textDecoration: 'none', display: 'block', cursor: 'pointer', transition: 'transform 0.2s' }}>
                     <div className="stat-info">
                       <h3>Total Children</h3>
                       <p className="stat-value">{stats?.totalChildren || 0}</p>
                     </div>
-                  </div>
-                  <div className="stat-card glass-panel">
+                  </Link>
+                  <Link href="/dashboard/admin/directory" className="stat-card glass-panel hover-lift" style={{ textDecoration: 'none', display: 'block', cursor: 'pointer', transition: 'transform 0.2s' }}>
                     <div className="stat-info">
                       <h3>Total Parents</h3>
                       <p className="stat-value text-secondary">{stats?.totalParents || 0}</p>
                     </div>
-                  </div>
-                  <div className="stat-card glass-panel">
+                  </Link>
+                  <Link href="/dashboard/admin/directory" className="stat-card glass-panel hover-lift" style={{ textDecoration: 'none', display: 'block', cursor: 'pointer', transition: 'transform 0.2s' }}>
                     <div className="stat-info">
                       <h3>Total Mentors</h3>
                       <p className="stat-value text-accent">{stats?.totalMentors || 0}</p>
                     </div>
-                  </div>
-                  <div className="stat-card glass-panel">
+                  </Link>
+                  <Link href="/dashboard/admin/attendance" className="stat-card glass-panel hover-lift" style={{ textDecoration: 'none', display: 'block', cursor: 'pointer', transition: 'transform 0.2s' }}>
                     <div className="stat-info">
                       <h3>Present Today</h3>
                       <p className="stat-value text-success" style={{ color: 'var(--secondary)' }}>{stats?.presentToday || 0}</p>
                     </div>
-                  </div>
+                  </Link>
                 </div>
 
                 {stats?.chartData && (

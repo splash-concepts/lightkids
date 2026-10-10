@@ -267,6 +267,13 @@ export class AdminService {
     return user.save();
   }
 
+  async approveUser(userId: string) {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+    user.isApproved = true;
+    return user.save();
+  }
+
   async assignClassesToMentor(userId: string, classIds: string[], branchId: string, isSuperAdmin: boolean) {
     const branchFilter = isSuperAdmin ? {} : { branchId };
     

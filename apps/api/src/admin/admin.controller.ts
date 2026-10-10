@@ -135,6 +135,12 @@ export class AdminController {
     return this.adminService.updateUserRole(userId, body, req.user.role);
   }
 
+  @Patch('users/:id/approve')
+  async approveUser(@Param('id') userId: string, @Req() req: any) {
+    this.checkAdmin(req);
+    return this.adminService.approveUser(userId);
+  }
+
   @Patch('users/:id/classes')
   async assignClassesToMentor(@Param('id') userId: string, @Body() body: { classIds: string[] }, @Req() req: any) {
     this.checkAdmin(req);

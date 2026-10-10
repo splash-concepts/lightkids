@@ -92,7 +92,14 @@ export default function ChildProfile() {
     })).reverse(); // Assuming descending from API, reverse for chronological chart
   }, [data?.attendance]);
 
-  if (loading) return <div className="home-container"><div style={{padding: '3rem', color: 'white'}}>Loading Profile...</div></div>;
+  if (loading) return (
+    <div className="home-container" style={{ minHeight: '100vh', padding: '2rem' }}>
+      <div className="animate-pulse" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{ height: '400px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}></div>
+        <div style={{ height: '400px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}></div>
+      </div>
+    </div>
+  );
   if (error) return <div className="home-container"><div style={{padding: '3rem', color: 'var(--danger)'}}>{error}</div></div>;
   if (!data || !data.child) return <div className="home-container"><div style={{padding: '3rem', color: 'white'}}>Child not found.</div></div>;
 

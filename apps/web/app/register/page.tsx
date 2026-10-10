@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Modal from "../../components/Modal";
 import "./register.css";
 
 export default function RegisterChild() {
@@ -129,10 +130,15 @@ export default function RegisterChild() {
       setFiles([]);
 
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Failed to register child");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSuccessConfirm = () => {
+    setSuccess(false);
+    window.location.href = "/";
   };
 
   return (
@@ -147,17 +153,24 @@ export default function RegisterChild() {
           <p>Fill out the information below to register a new child.</p>
         </div>
 
-        {error && (
-          <div style={{ color: 'var(--danger)', background: 'rgba(239,68,68,0.1)', padding: '0.75rem', borderRadius: '8px', fontSize: '0.9rem', textAlign: 'center' }}>
-            {error}
-          </div>
-        )}
+        <Modal 
+          isOpen={!!error} 
+          type="error" 
+          title="Registration Failed" 
+          onClose={() => setError("")}
+        >
+          <p>{error}</p>
+        </Modal>
         
-        {success && (
-          <div style={{ color: 'var(--secondary)', background: 'rgba(16, 185, 129, 0.1)', padding: '0.75rem', borderRadius: '8px', fontSize: '0.9rem', textAlign: 'center' }}>
-            Successfully registered! The 6-digit code has been generated securely.
-          </div>
-        )}
+        <Modal 
+          isOpen={success} 
+          type="success" 
+          title="Successfully Registered!" 
+          onConfirm={handleSuccessConfirm}
+          confirmText="Return to Dashboard"
+        >
+          <p>The child has been registered and their 6-digit code has been generated securely.</p>
+        </Modal>
 
         <form className="register-form" onSubmit={handleSubmit}>
           <div className="form-section">

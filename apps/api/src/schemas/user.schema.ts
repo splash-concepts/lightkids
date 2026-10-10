@@ -45,6 +45,9 @@ export class User {
 
   @Prop()
   office?: string; // e.g. "HOD", "Head Of Class"
+
+  @Prop({ default: true })
+  isApproved: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

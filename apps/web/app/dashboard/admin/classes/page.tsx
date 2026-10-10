@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Modal from "../../../../components/Modal";
 import "../../../page.css"; // Reuse dashboard styles
 
 export default function AdminClassesDashboard() {
@@ -17,6 +18,9 @@ export default function AdminClassesDashboard() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{ name: string; description: string; mentorIds: string[]; ageMin: number; ageMax: number }>({ name: "", description: "", mentorIds: [], ageMin: 0, ageMax: 0 });
   const [updating, setUpdating] = useState(false);
+
+  const [actionResult, setActionResult] = useState<{isOpen: boolean; type: 'success' | 'error'; title: string; message: string} | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{isOpen: boolean; title: string; message: string; onConfirm: () => void} | null>(null);
 
   const fetchClasses = async (token: string) => {
     try {
@@ -76,11 +80,9 @@ export default function AdminClassesDashboard() {
       
       await fetchClasses(token as string);
       setNewClass({ name: "", description: "", ageMin: 1, ageMax: 3 });
-      setSuccess("Class category created successfully!");
-      setTimeout(() => setSuccess(""), 3000);
+      setActionResult({ isOpen: true, type: 'success', title: 'Class Created', message: 'Class category created successfully!' });
     } catch (err: any) {
-      setError(err.message);
-      setTimeout(() => setError(""), 5000);
+      setActionResult({ isOpen: true, type: 'error', title: 'Failed to Create Class', message: err.message });
     } finally {
       setCreating(false);
     }
@@ -125,19 +127,15 @@ export default function AdminClassesDashboard() {
       
       await fetchClasses(token as string);
       setEditingId(null);
-      setSuccess("Class category updated successfully!");
-      setTimeout(() => setSuccess(""), 3000);
+      setActionResult({ isOpen: true, type: 'success', title: 'Class Updated', message: 'Class category updated successfully!' });
     } catch (err: any) {
-      setError(err.message);
-      setTimeout(() => setError(""), 5000);
+      setActionResult({ isOpen: true, type: 'error', title: 'Failed to Update Class', message: err.message });
     } finally {
       setUpdating(false);
     }
   };
 
-  const handleDeleteClass = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this class? Children in this class will become Unassigned.")) return;
-    setError("");
+  const performDelete = async (id: string) => {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/class-categories/${id}`, {
@@ -147,16 +145,34 @@ export default function AdminClassesDashboard() {
       if (!res.ok) throw new Error("Failed to delete class category");
       
       await fetchClasses(token as string);
-      setSuccess("Class category deleted successfully!");
-      setTimeout(() => setSuccess(""), 3000);
+      setActionResult({ isOpen: true, type: 'success', title: 'Class Deleted', message: 'Class category deleted successfully!' });
     } catch (err: any) {
-      setError(err.message);
-      setTimeout(() => setError(""), 5000);
+      setActionResult({ isOpen: true, type: 'error', title: 'Failed to Delete Class', message: err.message });
     }
   };
 
+  const handleDeleteClass = (id: string) => {
+    setConfirmAction({
+      isOpen: true,
+      title: "Delete Class?",
+      message: "Are you sure you want to delete this class? Children in this class will become Unassigned.",
+      onConfirm: () => performDelete(id)
+    });
+  };
+
   if (loading) {
-    return <div className="home-container"><div style={{padding: '3rem', color: 'white'}}>Loading Classes...</div></div>;
+    return (
+      <div className="home-container" style={{ minHeight: '100vh', padding: '2rem' }}>
+        <div className="animate-pulse" style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
+          <div style={{ height: '40px', width: '200px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}></div>
+          <div style={{ height: '100px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem' }}>
+            <div style={{ height: '400px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}></div>
+            <div style={{ height: '400px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -17,7 +17,7 @@ export default function StaffSignup() {
   const [loadingBranches, setLoadingBranches] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState<boolean | string>(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -64,10 +64,10 @@ export default function StaffSignup() {
         throw new Error(data.message || "Failed to create account");
       }
 
-      setSuccess(true);
+      setSuccess(data.message || true);
       setTimeout(() => {
         window.location.href = "/login";
-      }, 2000);
+      }, 4000);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -96,10 +96,9 @@ export default function StaffSignup() {
                 {error}
               </div>
             )}
-            
             {success && (
               <div className="success-alert">
-                Account created successfully! Redirecting to login...
+                {typeof success === 'string' ? success : "Account created successfully! Redirecting to login..."}
               </div>
             )}
 

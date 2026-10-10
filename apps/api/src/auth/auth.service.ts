@@ -27,6 +27,9 @@ export class AuthService {
     if (existingUser) throw new BadRequestException('Email already in use');
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const needsApproval = [UserRole.ADMIN, UserRole.MINISTER, UserRole.MENTOR].includes(role);
+    const isApproved = !needsApproval; // Parents and SuperAdmins bypass approval for now.
+
     const user = await this.userModel.create({
       name,
       email,
@@ -35,8 +38,9 @@ export class AuthService {
       branchId,
       phoneNumber,
       whatsappNumber,
+      isApproved,
     });
-    return { message: 'User registered successfully' };
+    return { message: needsApproval ? 'Account created. Pending approval from an Administrator.' : 'User registered successfully' };
   }
 
   async login(data: any) {
@@ -45,6 +49,10 @@ export class AuthService {
     
     if (!user || !user.password || !(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!user.isApproved) {
+      throw new UnauthorizedException('Account pending approval by an Administrator');
     }
 
     if (user.isTwoFactorEnabled) {
