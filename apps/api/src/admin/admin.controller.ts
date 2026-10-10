@@ -37,11 +37,16 @@ export class AdminController {
     @Query('role') role: string, 
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '50',
+    @Query('isApproved') isApproved: string,
     @Req() req: any
   ) {
     this.checkStaff(req);
     const branchId = req.user.role === 'SUPER_ADMIN' ? undefined : req.user.branchId;
-    return this.adminService.getUsers(role, branchId, parseInt(page, 10), parseInt(limit, 10));
+    let approvedFlag: boolean | undefined = undefined;
+    if (isApproved === 'false') approvedFlag = false;
+    else if (isApproved === 'true') approvedFlag = true;
+
+    return this.adminService.getUsers(role, branchId, parseInt(page, 10), parseInt(limit, 10), approvedFlag);
   }
 
   @Get('users/:id')

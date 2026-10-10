@@ -56,7 +56,15 @@ export default function UserDirectory() {
   const fetchUsers = (role: string, pageNum: number = 1) => {
     setLoading(true);
     const token = localStorage.getItem("token");
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/users?role=${role}&page=${pageNum}&limit=50`, {
+    
+    let url = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/users?page=${pageNum}&limit=50`;
+    if (role === 'PENDING') {
+      url += `&isApproved=false`;
+    } else {
+      url += `&role=${role}`;
+    }
+
+    fetch(url, {
       headers: { "Authorization": `Bearer ${token}` },
       cache: "no-store"
     })
@@ -264,6 +272,7 @@ export default function UserDirectory() {
               <button className={`btn ${filterRole === 'MENTOR' ? 'btn-primary' : 'btn-outline'}`} onClick={() => { setFilterRole('MENTOR'); setPage(1); }}>Teachers / Mentors</button>
               <button className={`btn ${filterRole === 'MINISTER' ? 'btn-primary' : 'btn-outline'}`} onClick={() => { setFilterRole('MINISTER'); setPage(1); }}>Ministers</button>
               <button className={`btn ${filterRole === 'ADMIN' ? 'btn-primary' : 'btn-outline'}`} onClick={() => { setFilterRole('ADMIN'); setPage(1); }}>Administrators</button>
+              <button className={`btn ${filterRole === 'PENDING' ? 'btn-primary' : 'btn-outline'}`} onClick={() => { setFilterRole('PENDING'); setPage(1); }} style={{ borderColor: 'var(--warning)', color: filterRole === 'PENDING' ? '#fff' : 'var(--warning)' }}>Pending Approvals</button>
             </div>
             
             <button className="btn btn-secondary" onClick={() => setShowAddForm(true)}>

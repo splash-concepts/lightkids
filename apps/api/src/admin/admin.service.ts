@@ -123,10 +123,11 @@ export class AdminService {
     };
   }
 
-  async getUsers(role?: string, branchId?: string, page: number = 1, limit: number = 50) {
+  async getUsers(role?: string, branchId?: string, page: number = 1, limit: number = 50, isApproved?: boolean) {
     const filter: any = {};
     if (role) filter.role = role;
     if (branchId) filter.branchId = branchId;
+    if (isApproved !== undefined) filter.isApproved = isApproved;
     
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
