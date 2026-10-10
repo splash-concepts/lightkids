@@ -109,7 +109,17 @@ export default function UserProfile() {
     }
   };
 
-  if (loading) return <div className="home-container"><div style={{padding: '3rem', color: 'white'}}>Loading Profile...</div></div>;
+  if (loading) return (
+    <div className="home-container" style={{ minHeight: '100vh', padding: '2rem' }}>
+      <div className="animate-pulse" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{ height: '500px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div style={{ height: '200px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}></div>
+          <div style={{ height: '400px', background: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}></div>
+        </div>
+      </div>
+    </div>
+  );
   if (error) return <div className="home-container"><div style={{padding: '3rem', color: 'var(--danger)'}}>{error}</div></div>;
   if (!data || !data.user) return <div className="home-container"><div style={{padding: '3rem', color: 'white'}}>User not found.</div></div>;
 

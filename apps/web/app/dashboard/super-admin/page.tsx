@@ -69,7 +69,23 @@ export default function SuperAdminDashboard() {
   };
 
   if (loading) {
-    return <div className="home-container"><div style={{padding: '3rem', color: 'white'}}>Loading Super Admin...</div></div>;
+    return (
+      <div className="home-container" style={{ minHeight: '100vh', padding: '2rem' }}>
+        <div className="animate-pulse" style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ height: '80px', background: 'rgba(255,255,255,0.1)', borderRadius: '16px' }}></div>
+          
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+            {[1, 2, 3].map(i => <div key={i} style={{ height: '40px', width: '120px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}></div>)}
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+            {[1, 2].map(i => (
+              <div key={i} style={{ height: '400px', background: 'rgba(255,255,255,0.05)', borderRadius: '24px' }}></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
