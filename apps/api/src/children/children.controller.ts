@@ -35,7 +35,7 @@ export class ChildrenController {
 
   @Get('promotable')
   async getPromotableChildren(@Req() req: any) {
-    if (req.user.role !== 'ADMIN') {
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
       throw new UnauthorizedException('Only Admins can review promotions');
     }
     return this.childrenService.getPromotableChildren(req.user.branchId);
@@ -43,10 +43,10 @@ export class ChildrenController {
 
   @Patch(':id/promote')
   async promoteChild(@Param('id') id: string, @Body() body: { newClassCategoryId: string; note?: string }, @Req() req: any) {
-    if (req.user.role !== 'ADMIN') {
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
       throw new UnauthorizedException('Only Admins can approve promotions');
     }
-    return this.childrenService.promoteChild(id, body.newClassCategoryId, body.note, req.user.userId);
+    return this.childrenService.promoteChild(id, body.newClassCategoryId, body.note, req.user.userId || req.user.sub);
   }
 
   @Get('my-kids')

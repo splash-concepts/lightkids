@@ -18,13 +18,13 @@ export class MaterialController {
     })
   }))
   async uploadMaterial(@Body() body: any, @Req() req: any, @UploadedFile() file: Express.Multer.File) {
-    if (req.user.role !== 'MENTOR' && req.user.role !== 'ADMIN') {
+    if (req.user.role !== 'MENTOR' && req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
       throw new UnauthorizedException('Only Mentors and Admins can upload materials');
     }
     return this.materialService.uploadMaterial({
       ...body,
       fileUrl: file ? `/uploads/materials/${file.filename}` : undefined,
-      authorId: req.user.userId,
+      authorId: req.user.userId || req.user.sub,
       branchId: req.user.branchId,
     });
   }

@@ -68,8 +68,16 @@ export default function UserDirectory() {
       headers: { "Authorization": `Bearer ${token}` },
       cache: "no-store"
     })
-      .then(res => res.json())
+      .then(res => {
+        if (res.status === 401) {
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+          return null;
+        }
+        return res.json();
+      })
       .then(data => {
+        if (!data) return;
         if (Array.isArray(data)) {
           setUsers(data);
         } else if (data && Array.isArray(data.data)) {
@@ -325,7 +333,7 @@ export default function UserDirectory() {
                     </div>
                   </Link>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    {!user.isApproved && (
+                    {user.isApproved === false && user.role !== 'SUPER_ADMIN' && user.role !== 'PARENT' && (
                       <button onClick={(e) => { e.preventDefault(); handleApproveUser(user._id); }} className="btn btn-outline btn-sm" style={{ padding: '0.4rem 1rem', borderColor: 'var(--success)', color: 'var(--success)' }}>
                         Approve Account
                       </button>

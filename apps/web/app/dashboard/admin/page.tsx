@@ -46,12 +46,19 @@ export default function AdminDashboard() {
       cache: "no-store"
     })
       .then(res => {
+        if (res.status === 401) {
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+          return null;
+        }
         if (!res.ok) throw new Error("Failed to load stats. Ensure you have Admin privileges.");
         return res.json();
       })
       .then(data => {
-        setStats(data);
-        setLoading(false);
+        if (data) {
+          setStats(data);
+          setLoading(false);
+        }
       })
       .catch(err => {
         setError(err.message);

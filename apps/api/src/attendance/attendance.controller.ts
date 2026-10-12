@@ -10,24 +10,24 @@ export class AttendanceController {
 
   @Post('mark')
   async markAttendance(@Body() body: { childId?: string, userId?: string, status: AttendanceStatus, reason?: string }, @Req() req: any) {
-    if (req.user.role !== 'MENTOR' && req.user.role !== 'ADMIN') {
+    if (req.user.role !== 'MENTOR' && req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
       throw new UnauthorizedException('Only Mentors and Admins can log attendance');
     }
     return this.attendanceService.markAttendance({
       ...body,
-      loggedBy: req.user.userId,
+      loggedBy: req.user.userId || req.user.sub,
       branchId: req.user.branchId,
     });
   }
 
   @Post('report-absence')
   async reportAbsence(@Body() body: { childId: string, reason: string }, @Req() req: any) {
-    return this.attendanceService.reportAbsence(body.childId, body.reason, req.user.userId, req.user.branchId);
+    return this.attendanceService.reportAbsence(body.childId, body.reason, req.user.userId || req.user.sub, req.user.branchId);
   }
 
   @Get('class/:classId/:date')
   async getClassAttendance(@Param('classId') classId: string, @Param('date') date: string, @Req() req: any) {
-    if (req.user.role !== 'MENTOR' && req.user.role !== 'ADMIN') {
+    if (req.user.role !== 'MENTOR' && req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
       throw new UnauthorizedException('Only Mentors and Admins can view class attendance');
     }
     return this.attendanceService.getAttendanceForClass(classId, new Date(date), req.user.branchId);

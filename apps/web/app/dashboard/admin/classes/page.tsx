@@ -27,6 +27,11 @@ export default function AdminClassesDashboard() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/admin/class-categories`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+        return;
+      }
       if (!res.ok) throw new Error("Failed to fetch classes");
       const data = await res.json();
       setClasses(data);

@@ -51,7 +51,9 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (!user.isApproved) {
+    // Only block if explicitly pending approval (isApproved === false).
+    // SUPER_ADMIN and PARENT never need approval. Existing accounts created before this feature are not blocked.
+    if (user.role !== UserRole.SUPER_ADMIN && user.role !== UserRole.PARENT && user.isApproved === false) {
       throw new UnauthorizedException('Account pending approval by an Administrator');
     }
 

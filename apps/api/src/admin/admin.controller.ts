@@ -86,7 +86,7 @@ export class AdminController {
   @Delete('children/:id')
   async deleteChild(@Param('id') id: string, @Req() req: any) {
     this.checkAdmin(req);
-    return this.adminService.deleteChild(id, req.user.sub);
+    return this.adminService.deleteChild(id, req.user.userId || req.user.sub);
   }
 
   // Multi-Tenancy / Branch Management
@@ -105,7 +105,7 @@ export class AdminController {
   @Delete('branches/:id')
   async deleteBranch(@Param('id') id: string, @Req() req: any) {
     this.checkSuperAdmin(req);
-    return this.adminService.deleteBranch(id, req.user.sub);
+    return this.adminService.deleteBranch(id, req.user.userId || req.user.sub);
   }
 
   // Class Management per Branch
@@ -136,7 +136,7 @@ export class AdminController {
   @Delete('class-categories/:id')
   async deleteClassCategory(@Param('id') id: string, @Req() req: any) {
     this.checkAdmin(req);
-    return this.adminService.deleteClassCategory(id, req.user.branchId, req.user.role === 'SUPER_ADMIN', req.user.sub);
+    return this.adminService.deleteClassCategory(id, req.user.branchId, req.user.role === 'SUPER_ADMIN', req.user.userId || req.user.sub);
   }
 
   // User Management
@@ -161,7 +161,7 @@ export class AdminController {
   @Delete('users/:id')
   async deleteUser(@Param('id') userId: string, @Req() req: any) {
     this.checkAdmin(req);
-    return this.adminService.deleteUser(userId, req.user.sub, req.user.role);
+    return this.adminService.deleteUser(userId, req.user.userId || req.user.sub, req.user.role);
   }
 
   @Patch('users/:id/classes')

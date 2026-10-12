@@ -9,10 +9,10 @@ export class NoticesController {
 
   @Post('event')
   async createEvent(@Body() body: any, @Req() req: any) {
-    if (req.user.role !== 'ADMIN') {
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
       throw new UnauthorizedException('Only Admins can create events');
     }
-    return this.noticesService.createEvent(body, req.user.userId, req.user.branchId);
+    return this.noticesService.createEvent(body, req.user.userId || req.user.sub, req.user.branchId);
   }
 
   @Post('update')

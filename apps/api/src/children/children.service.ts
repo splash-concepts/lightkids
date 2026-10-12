@@ -15,8 +15,10 @@ export class ChildrenService {
     @InjectModel(AcademicMaterial.name) private materialModel: Model<AcademicMaterialDocument>
   ) {}
 
-  async getCategories(branchId: string, mentorId?: string) {
-    const filter: any = { $or: [{ branchId: branchId ? new Types.ObjectId(branchId) : null }, { branchId: { $exists: false } }, { branchId: null }] };
+  async getCategories(branchId?: string, mentorId?: string) {
+    const filter: any = branchId
+      ? { $or: [{ branchId: new Types.ObjectId(branchId) }, { branchId: { $exists: false } }, { branchId: null }] }
+      : {};
     if (mentorId) {
       filter.mentorIds = new Types.ObjectId(mentorId);
     }

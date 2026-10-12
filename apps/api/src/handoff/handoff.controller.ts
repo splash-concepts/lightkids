@@ -15,10 +15,10 @@ export class HandoffController {
 
   @Post()
   async logHandoff(@Body() body: { childId: string, type: HandoffType, code: string }, @Req() req: any) {
-    if (req.user.role !== 'MENTOR' && req.user.role !== 'ADMIN') {
+    if (req.user.role !== 'MENTOR' && req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN') {
       throw new UnauthorizedException('Only Mentors and Admins can log handoffs');
     }
-    return this.handoffService.logHandoff(body.childId, body.type, body.code, req.user.userId);
+    return this.handoffService.logHandoff(body.childId, body.type, body.code, req.user.userId || req.user.sub);
   }
 
   @Get('recent')
