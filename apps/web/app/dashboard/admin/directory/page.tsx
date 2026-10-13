@@ -327,9 +327,22 @@ export default function UserDirectory() {
                   <div className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem' }}>
                     <Link href={`/users/${user._id}`} style={{ textDecoration: 'none', color: 'inherit', flex: 1, display: 'block', cursor: 'pointer' }}>
                     <div>
-                      <h3 style={{ margin: 0 }}>{user.name}</h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <h3 style={{ margin: 0 }}>{user.name}</h3>
+                        {user.parentType && (
+                          <span className="badge" style={{ background: user.parentType === 'Mother' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)', color: user.parentType === 'Mother' ? '#10b981' : '#f59e0b', fontSize: '0.78rem', padding: '0.15rem 0.55rem', borderRadius: '12px', fontWeight: 600 }}>
+                            {user.parentType}
+                          </span>
+                        )}
+                      </div>
                       <p style={{ margin: 0, color: 'var(--text-secondary)' }}>{user.email}</p>
-                      <small>Joined: {new Date(user.createdAt).toLocaleDateString()}</small>
+                      {(user.phoneNumber || user.whatsappNumber) && (
+                        <p style={{ margin: '0.2rem 0', fontSize: '0.85rem' }}>
+                          {user.phoneNumber && <span>📞 Call: {user.phoneNumber}</span>}
+                          {user.whatsappNumber && <span style={{ marginLeft: '0.75rem', color: '#25D366' }}>💬 WhatsApp: {user.whatsappNumber}</span>}
+                        </p>
+                      )}
+                      <small style={{ color: 'var(--text-tertiary)' }}>Joined: {new Date(user.createdAt).toLocaleDateString()}</small>
                     </div>
                   </Link>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>

@@ -23,6 +23,7 @@ import { NotificationsModule } from './notifications/notifications.module.js';
 import { NoticesModule } from './notices/notices.module.js';
 import { AdminModule } from './admin/admin.module.js';
 import { ServiceLinksModule } from './service-links/service-links.module.js';
+import { QuizzesModule } from './quizzes/quizzes.module.js';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { ServiceLinksModule } from './service-links/service-links.module.js';
     NoticesModule,
     AdminModule,
     ServiceLinksModule,
+    QuizzesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

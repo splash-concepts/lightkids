@@ -31,6 +31,9 @@ export class User {
   @Prop({ required: true, enum: UserRole })
   role: UserRole;
 
+  @Prop({ enum: ['Mother', 'Father'], default: undefined })
+  parentType?: 'Mother' | 'Father';
+
   @Prop()
   profileImage?: string;
 

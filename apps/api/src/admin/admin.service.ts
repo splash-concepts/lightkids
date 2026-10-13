@@ -146,7 +146,17 @@ export class AdminService {
     let classes: any[] = [];
     
     if (user.role === UserRole.PARENT) {
-      children = await this.childModel.find({ parentIds: user._id }).populate('classCategoryId');
+      children = await this.childModel.find({
+        $or: [
+          { parentIds: user._id },
+          { 'parentsInfo.father.userId': user._id },
+          { 'parentsInfo.mother.userId': user._id },
+          ...(user.phoneNumber ? [
+            { 'parentsInfo.father.phone': user.phoneNumber },
+            { 'parentsInfo.mother.phone': user.phoneNumber }
+          ] : [])
+        ]
+      }).populate('classCategoryId');
       if (user.branchId) {
         children = children.map((child: any) => {
           const obj = child.toObject();
@@ -184,7 +194,7 @@ export class AdminService {
     
     const skip = (page - 1) * limit;
     let [data, total] = await Promise.all([
-      this.childModel.find(filter).populate('classCategoryId').populate('parentIds', 'name email phoneNumber whatsappNumber').sort({ createdAt: -1 }).skip(skip).limit(limit),
+      this.childModel.find(filter).populate('classCategoryId').populate('parentIds', 'name email phoneNumber whatsappNumber parentType').sort({ createdAt: -1 }).skip(skip).limit(limit),
       this.childModel.countDocuments(filter)
     ]);
     
@@ -205,7 +215,7 @@ export class AdminService {
   }
 
   async getChild(id: string) {
-    const child = await this.childModel.findById(id).populate('classCategoryId').populate('parentIds', 'name email phoneNumber whatsappNumber');
+    const child = await this.childModel.findById(id).populate('classCategoryId').populate('parentIds', 'name email phoneNumber whatsappNumber parentType');
     const attendance = await this.attendanceModel.find({ childId: id }).sort({ date: -1 });
 
     let childObj: any = child ? child.toObject() : null;

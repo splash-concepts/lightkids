@@ -138,10 +138,15 @@ export default function MaterialsPage() {
       <div className="bg-shape shape-3"></div>
       
       <div className="materials-layout">
-        <div className="materials-header">
-          <Link href="/" className="back-link">← Back to Dashboard</Link>
-          <h2>Academic Materials & Sermon Notes</h2>
-          <p>Access and download resources for your child's class.</p>
+        <div className="materials-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <Link href="/" className="back-link">← Back to Dashboard</Link>
+            <h2>Academic Materials & Sermon Notes</h2>
+            <p>Access and download resources for your child's class.</p>
+          </div>
+          <Link href="/quizzes" className="btn btn-primary hover-lift" style={{ background: 'linear-gradient(135deg, #4F46E5, #10B981)', whiteSpace: 'nowrap' }}>
+            📖 Interactive Sermon Quizzes
+          </Link>
         </div>
 
         <div className="materials-grid">

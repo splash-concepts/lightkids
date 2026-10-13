@@ -23,6 +23,28 @@ export class Child {
   @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }] })
   parentIds: Types.ObjectId[];
 
+  @Prop({
+    type: {
+      mother: {
+        name: { type: String },
+        phone: { type: String },
+        whatsapp: { type: String },
+        userId: { type: Types.ObjectId, ref: 'User' },
+      },
+      father: {
+        name: { type: String },
+        phone: { type: String },
+        whatsapp: { type: String },
+        userId: { type: Types.ObjectId, ref: 'User' },
+      },
+    },
+    default: {},
+  })
+  parentsInfo?: {
+    mother?: { name?: string; phone?: string; whatsapp?: string; userId?: Types.ObjectId };
+    father?: { name?: string; phone?: string; whatsapp?: string; userId?: Types.ObjectId };
+  };
+
   @Prop({ type: [String] })
   caregiverImages: string[]; // Legacy/Generic URLs for nanny/self images
 

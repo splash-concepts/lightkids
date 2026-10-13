@@ -11,6 +11,7 @@ export default function Signup() {
     email: "",
     password: "",
     role: "PARENT",
+    parentType: "Mother",
     branchId: "",
     phoneNumber: "",
     whatsappNumber: "",
@@ -132,6 +133,20 @@ export default function Signup() {
                   value={formData.name}
                   onChange={handleChange}
                 />
+              </div>
+
+              <div className="input-group">
+                <label htmlFor="parentType">Parent Type <span className="required">*</span></label>
+                <select 
+                  name="parentType" 
+                  id="parentType" 
+                  value={formData.parentType} 
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="Mother">Mother</option>
+                  <option value="Father">Father</option>
+                </select>
               </div>
 
               <div className="input-group">

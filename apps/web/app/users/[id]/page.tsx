@@ -159,6 +159,11 @@ export default function UserProfile() {
                   <span className="badge" style={{ background: 'var(--accent)', padding: '0.3rem 0.6rem', borderRadius: '4px', display: 'inline-block', marginRight: '0.5rem' }}>
                     {user.role}
                   </span>
+                  {user.parentType && (
+                    <span className="badge" style={{ background: user.parentType === 'Mother' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)', color: user.parentType === 'Mother' ? '#10b981' : '#f59e0b', padding: '0.3rem 0.6rem', borderRadius: '4px', display: 'inline-block', marginRight: '0.5rem', fontWeight: 600 }}>
+                      {user.parentType}
+                    </span>
+                  )}
                   {user.office && (
                     <span className="badge" style={{ background: 'rgba(255,255,255,0.1)', padding: '0.3rem 0.6rem', borderRadius: '4px', display: 'inline-block', border: '1px solid var(--border-color)' }}>
                       {user.office}
@@ -168,22 +173,24 @@ export default function UserProfile() {
               </div>
             </div>
             
-            <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
               <div>
                 <p style={{ margin: '0.25rem 0', color: 'var(--text-secondary)' }}>Email</p>
-                <p style={{ fontSize: '1.1rem' }}>{user.email}</p>
+                <p style={{ fontSize: '1.05rem', wordBreak: 'break-all' }}>{user.email}</p>
               </div>
               {user.phoneNumber && (
                 <div>
-                  <p style={{ margin: '0.25rem 0', color: 'var(--text-secondary)' }}>Phone</p>
-                  <p style={{ fontSize: '1.1rem' }}>{user.phoneNumber}</p>
+                  <p style={{ margin: '0.25rem 0', color: 'var(--text-secondary)' }}>Call Line (Phone)</p>
+                  <p style={{ fontSize: '1.05rem' }}>
+                    <a href={`tel:${user.phoneNumber}`} style={{ color: 'var(--primary)' }}>📞 {user.phoneNumber}</a>
+                  </p>
                 </div>
               )}
               {user.whatsappNumber && (
                 <div>
-                  <p style={{ margin: '0.25rem 0', color: 'var(--text-secondary)' }}>WhatsApp</p>
-                  <p style={{ fontSize: '1.1rem' }}>
-                    <a href={`https://wa.me/${user.whatsappNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ color: '#25D366' }}>{user.whatsappNumber}</a>
+                  <p style={{ margin: '0.25rem 0', color: 'var(--text-secondary)' }}>WhatsApp Line</p>
+                  <p style={{ fontSize: '1.05rem' }}>
+                    <a href={`https://wa.me/${user.whatsappNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ color: '#25D366' }}>💬 {user.whatsappNumber}</a>
                   </p>
                 </div>
               )}

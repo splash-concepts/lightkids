@@ -22,7 +22,7 @@ export class AuthService {
   }
 
   async register(data: any) {
-    const { name, email, password, role, branchId, phoneNumber, whatsappNumber } = data;
+    const { name, email, password, role, branchId, phoneNumber, whatsappNumber, parentType } = data;
     const existingUser = await this.userModel.findOne({ email });
     if (existingUser) throw new BadRequestException('Email already in use');
 
@@ -38,6 +38,7 @@ export class AuthService {
       branchId,
       phoneNumber,
       whatsappNumber,
+      parentType: role === UserRole.PARENT ? parentType : undefined,
       isApproved,
     });
     return { message: needsApproval ? 'Account created. Pending approval from an Administrator.' : 'User registered successfully' };
@@ -64,11 +65,23 @@ export class AuthService {
       if (!result.valid) throw new UnauthorizedException('Invalid 2FA token');
     }
 
-    const payload = { sub: user._id, email: user.email, role: user.role, branchId: user.branchId };
+    const payload = {
+      sub: user._id,
+      email: user.email,
+      role: user.role,
+      branchId: user.branchId,
+      parentType: user.parentType,
+      phoneNumber: user.phoneNumber,
+      whatsappNumber: user.whatsappNumber,
+      name: user.name,
+    };
     return {
       access_token: this.jwtService.sign(payload),
       role: user.role,
       name: user.name,
+      parentType: user.parentType,
+      phoneNumber: user.phoneNumber,
+      whatsappNumber: user.whatsappNumber,
       require2faSetup: user.role === UserRole.MENTOR && !user.isTwoFactorEnabled
     };
   }

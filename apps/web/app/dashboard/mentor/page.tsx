@@ -155,7 +155,10 @@ export default function MentorDashboard() {
             <h2 className="welcome-title">Your Class Overview 📚</h2>
             <p className="welcome-subtitle">Manage attendance and academic materials for your assigned class.</p>
           </div>
-          <div>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <Link href="/quizzes" className="btn btn-primary btn-sm" style={{ background: 'linear-gradient(135deg, #4F46E5, #10B981)', whiteSpace: 'nowrap' }}>
+              ✍️ Sermon Quizzes & Notes
+            </Link>
             <select 
               className="select-input" 
               value={selectedClass?._id || ""}
